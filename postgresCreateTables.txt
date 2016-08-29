@@ -1,0 +1,82 @@
+create table stocks2016.d2010 (
+	cusip varchar(8)
+	, PERMNO bigint
+	, PERMCO bigint
+	, ISSUNO float
+	, hsic float
+	, retdate date
+	, bid float
+	, ask float
+	, PRC float
+	, VOL bigint
+	, RET varchar(20)
+	, SHROUT bigint);
+commit;
+
+create table stocks2016.d2011 (
+	cusip varchar(8)
+	, PERMNO bigint
+	, PERMCO bigint
+	, ISSUNO float
+	, hsic float
+	, retdate date
+	, bid float
+	, ask float
+	, PRC float
+	, VOL bigint
+	, RET varchar(20)
+	, SHROUT bigint);
+commit;
+
+create table stocks2016.fnd (
+	gvkey varchar(8)
+	, datadate date
+	, fyear int
+	, indfmr varchar(4)
+	, consol varchar(1)
+	, popsrc varchar(1)
+	, datafmt varchar(3)
+	, tic varchar(8)
+	, cusip varchar(11)
+	, conm varchar(30)
+	, fyr int
+	, cash float
+	, dp float
+	, ebitda float
+	, emp float
+	, invt float
+	, netinc float
+	, ppent float
+	, rev float
+	, ui float
+	, cik varchar(10)
+	);
+commit;
+
+create table stocks2016.lnk (
+	gvkey varchar(8)
+	, linkprim varchar(1)
+	, liid varchar(4)
+	, linktype varchar(4)
+	, lpermno bigint
+	, lpermco bigint
+	, usedflag int
+	, linkdt date
+	, linkenddt varchar(10)
+	);
+commit;
+
+
+COPY stocks2016.lnk FROM
+	'/home/andre/Documents/msan691/SQL2016/link.tdf'
+	HEADER CSV DELIMITER E'\t';
+COPY stocks2016.fnd FROM
+	'/home/andre/Documents/msan691/SQL2016/compm.tdf'
+	HEADER CSV DELIMITER E'\t';
+COPY stocks2016.d2010 FROM
+	'/home/andre/Documents/msan691/SQL2016/dsf2010.tdf'
+	HEADER CSV DELIMITER E'\t';
+COPY stocks2016.d2011 FROM
+	'/home/andre/Documents/msan691/SQL2016/dsf2011.tdf'
+	HEADER CSV DELIMITER E'\t';
+commit;

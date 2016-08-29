@@ -1,0 +1,623 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{adjustbox}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{listings}
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{framed}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\newcommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+  \title{MSAN 691 - Homework 1}
+  \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+  \author{Christine Chu, Andre Guimaraes Duarte, Mikaela Hoffman-Stapleton, April Wang}
+  \preauthor{\centering\large\emph}
+  \postauthor{\par}
+  \predate{\centering\large\emph}
+  \postdate{\par}
+  \date{September 1, 2016}
+  
+% Redefines (sub)paragraphs to behave more like section*s
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+\usepackage{color}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% question 3 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Question 3}
+%%%%%%%%%%%%%%%%%%%%%%% a %%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{a)}
+In order to get all columns relating to CUSIP 45920010, we use the following query:
+
+\color{blue}
+\begin{verbatim}
+SELECT *
+FROM stocks2016.d2010
+WHERE cusip = '45920010';
+\end{verbatim}
+\color{black}
+
+We get 252 resulting rows, of which we only show 10 in this write-up:
+
+\begin{adjustbox}{width=1.2\linewidth,totalheight=4in, center}
+\begin{tabular}{|l | r | r | r | r | l | r | r | r | r | l | r|}
+\hline
+\textit{cusip} & \textit{permno} & \textit{permco} & \textit{issuno} & \textit{hsic} & \textit{retdate} & \textit{bid} & \textit{ask} & \textit{prc} & \textit{vol} & \textit{ret} & \textit{shrout} \\
+\hline
+45920010 & 12490 & 20990 & 0 & 7379 & 2010-01-04 & 130.85001 & 132.97 & 132.45 & 6155800 & 0.011841 & 1313603 \\
+45920010 & 12490 & 20990 & 0 & 7379 & 2010-01-05 & 130.10001 & 131.85001 & 130.85001 & 6842500 & -0.012080 & 1313603 \\
+45920010 & 12490 & 20990 & 0 & 7379 & 2010-01-06 & 129.81 & 131.49001 & 130 & 5605300 & -0.006496 & 1313603 \\
+45920010 & 12490 & 20990 & 0 & 7379 & 2010-01-07 & 128.91 & 130.25 & 129.55 & 5840600 & -0.003462 & 1313603 \\
+45920010 & 12490 & 20990 & 0 & 7379 & 2010-01-08 & 129.05 & 130.91991 & 130.85001 & 4197100 & 0.010035 & 1313603 \\
+45920010 & 12490 & 20990 & 0 & 7379 & 2010-01-11 & 128.67 & 131.06 & 129.48 & 5731200 & -0.010470 & 1313603 \\
+45920010 & 12490 & 20990 & 0 & 7379 & 2010-01-12 & 129 & 131.33 & 130.50999 & 8083400 & 0.007955 & 1313603 \\
+45920010 & 12490 & 20990 & 0 & 7379 & 2010-01-13 & 129.16 & 131.12 & 130.23 & 6458300 & -0.002145 & 1313603 \\
+45920010 & 12490 & 20990 & 0 & 7379 & 2010-01-14 & 129.91 & 132.71001 & 132.31 & 7114500 & 0.015972 & 1313603 \\
+45920010 & 12490 & 20990 & 0 & 7379 & 2010-01-15 & 131.089 & 132.89 & 131.78 & 8502300 & -0.004006 & 1313603 \\
+\ldots & \ldots & \ldots & \ldots & \ldots & \ldots & \ldots & \ldots & \ldots & \ldots & \ldots & \ldots \\
+\hline
+\end{tabular}
+\end{adjustbox}
+
+\begin{center}
+\noindent (252 rows) \\
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%% b %%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{b)}
+In order to get all columns relating to CUSIP 45920010 on the 7th of January, we use the following query:
+
+\color{blue}
+\begin{verbatim}
+SELECT *
+FROM stocks2016.d2010
+WHERE cusip = '45920010'
+  AND retdate = '2010-01-07';
+\end{verbatim}
+\color{black}
+
+We get 1 resulting row:
+
+\begin{adjustbox}{width=1.2\linewidth,totalheight=4in, center}
+\begin{tabular}{|l | r | r | r | r | l | r | r | r | r | l | r|}
+\hline
+\textit{cusip} & \textit{permno} & \textit{permco} & \textit{issuno} & \textit{hsic} & \textit{retdate} & \textit{bid} & \textit{ask} & \textit{prc} & \textit{vol} & \textit{ret} & \textit{shrout} \\
+\hline
+45920010 & 12490 & 20990 & 0 & 7379 & 2010-01-07 & 128.91 & 130.25 & 129.55 & 5840600 & -0.003462 & 1313603 \\
+\hline
+\end{tabular}
+\end{adjustbox}
+
+\begin{center}
+\noindent (1 row) \\
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%% c %%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{c)}
+In order to get the difference between the bid and the ask for CUSIP 45920010 on the 7th of January, we use the query:
+
+\color{blue}
+\begin{verbatim}
+SELECT bid-ask AS difference
+FROM stocks2016.d2010
+WHERE cusip = '45920010'
+  AND retdate = '2010-01-07';
+\end{verbatim}
+\color{black}
+
+We get one resulting value for the difference between bid and ask:
+
+\begin{center}
+\begin{tabular}{|r|}
+\hline
+\textit{difference} \\
+\hline
+-1.34 \\
+\hline
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%% d %%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{d)}
+In order to get the days when CUSIP 45920010 has a volume less than 5 million and a bid over \$140, we use the query:
+
+\color{blue}
+\begin{verbatim}
+SELECT retdate
+FROM stocks2016.d2010
+WHERE cusip = '45920010'
+  AND vol < 5000000
+  AND bid > 140;
+\end{verbatim}
+\color{black}
+
+We get 31 resulting dates, of which we only the show 10 in this write-up:
+
+\begin{center}
+\begin{tabular}{|l|}
+\hline
+\textit{retdate} \\
+\hline
+2010-11-02 \\
+2010-11-05 \\
+2010-11-08 \\
+2010-11-11 \\
+2010-11-12 \\
+2010-11-15 \\
+2010-11-17 \\
+2010-11-18 \\
+2010-11-22 \\
+2010-11-23 \\
+\ldots \\
+\hline
+\end{tabular}
+
+\noindent (31 rows) \\
+\end{center}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% question 4 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Question 4}
+%%%%%%%%%%%%%%%%%%%%%%% a %%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{a)}
+In order to get the market capitalization for permno 14593 on the first of February in 2010, we use the following query:
+
+\color{blue}
+\begin{verbatim}
+SELECT shrout*prc AS market_capitalization
+FROM stocks2016.d2010
+WHERE permno = 14593
+  AND retdate = '2010-02-01';
+\end{verbatim}
+\color{black}
+
+We get one resultin market capitalization value:
+
+\begin{center}
+\begin{tabular}{|r|}
+\hline
+\textit{market\_capitalization} \\
+\hline
+176580190.35 \\
+\hline
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%% b %%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{b)}
+In order to get the permnos and market capitalizations for the companies with the top 5 market capitalization-days in 2010, we use the following queries:
+
+\color{blue}
+\begin{verbatim}
+SELECT permno, shrout*prc AS market_capitalization
+FROM stocks2016.d2010
+WHERE shrout*prc IS NOT null
+ORDER BY market_capitalization DESC
+LIMIT 5;
+\end{verbatim}
+\color{black}
+
+We get 5 resulting rows containing the permno and the market capitalization:
+
+\begin{center}
+\begin{tabular}{|r | r|}
+\hline
+\textit{permno} & \textit{market\_capitalization} \\
+\hline
+11850 & 370224534.94 \\
+11850 & 369972407.09 \\
+11850 & 369921981.52 \\
+11850 & 369115172.4 \\
+11850 & 368711767.84 \\
+\hline
+\end{tabular}
+
+\noindent (5 rows) \\
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%% c %%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{c)}
+In order to get the permnos and market capitalizations for the companies with the top 5 market capitalizations on February 3rd 2010, we use the following query:
+
+\color{blue}
+\begin{verbatim}
+SELECT permno, shrout*prc AS market_capitalization
+FROM stocks2016.d2010
+WHERE shrout*prc IS NOT null
+  AND retdate = '2010-02-03'
+ORDER BY market_capitalization DESC
+LIMIT 5;
+\end{verbatim}
+\color{black}
+
+We get 5 resulting rows containing the permno and the market capitalization:
+
+\begin{center}
+\begin{tabular}{|r | r|}
+\hline
+\textit{permno} & \textit{market\_capitalization} \\
+\hline
+11850 & 315144406.8 \\
+10107 & 251098298.43 \\
+55976 & 206778034.44 \\
+18163 & 181972751.45 \\
+14593 & 180660767.85 \\
+\hline
+\end{tabular}
+
+\noindent (5 rows) \\
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%% d %%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{d)}
+In order to get the permnos and market capitalizations for the companies with the bottom 5 market capitalization-days in 2010, we use the following queries:
+
+\color{blue}
+\begin{verbatim}
+SELECT permno, shrout*prc AS market_capitalization
+FROM stocks2016.d2010
+ORDER BY market_capitalization ASC
+LIMIT 5;
+\end{verbatim}
+\color{black}
+
+We get 5 resulting rows containing the permno and the market capitalization:
+
+\begin{center}
+\begin{tabular}{|r | r|}
+\hline
+\textit{permno} & \textit{market\_capitalization} \\
+\hline
+88335 & -5641098.965 \\
+79977 & -4748698.4 \\
+91462 & -1674922.53 \\
+88811 & -1356934.75 \\
+83264 & -1276178.53 \\
+\hline
+\end{tabular}
+
+\noindent (5 rows) \\
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%% e %%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{e)}
+In order to get the permnos and market capitalizations for the companies with the bottom 5 market capitalizations on February 3rd 2010 with stocks that have a trading volume of less than 10 million, we use the following query:
+
+\color{blue}
+\begin{verbatim}
+SELECT permno, shrout*prc AS market_capitalization
+FROM stocks2016.d2010
+WHERE retdate = '2010-02-03'
+  AND vol < 10000000
+ORDER BY market_capitalization ASC
+LIMIT 5;
+\end{verbatim}
+\color{black}
+
+We get 5 resulting rows containing the permno and the market capitalization:
+
+\begin{center}
+\begin{tabular}{|r | r|}
+\hline
+\textit{permno} & \textit{market\_capitalization} \\
+\hline
+61508 & -484627.92 \\
+92394 & -484163.35 \\
+29014 & -402096.45 \\
+91278 & -314288.595 \\
+90228 & -242844.48 \\
+\hline
+\end{tabular}
+
+\noindent (5 rows) \\
+\end{center}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% question 5 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Question 5}
+%%%%%%%%%%%%%%%%%%%%%%% a %%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{a)}
+In order to get the permno of the company with the smallest bid-ask spread in 2010 with a volume less than $25,000$, we use the following query:
+
+\color{blue}
+\begin{verbatim}
+SELECT permno
+FROM stocks2016.d2010
+WHERE vol < 25000
+ORDER BY abs(bid-ask) ASC
+LIMIT 1;
+\end{verbatim}
+\color{black}
+
+We get one resulting permno:
+
+\begin{center}
+\begin{tabular}{|r|}
+\hline
+\textit{permno} \\
+\hline
+10001 \\
+\hline
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%% b %%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{b)}
+In order to get the permno of the company with the smallest bid-ask spread on February 8th 2010 that also had more than $500,000$ shares outstanding, we use the following query:
+
+\color{blue}
+\begin{verbatim}
+SELECT permno
+FROM stocks2016.d2010
+WHERE retdate = '2010-02-08'
+  AND shrout > 500000
+ORDER BY abs(bid-ask) ASC
+LIMIT 1;
+\end{verbatim}
+\color{black}
+
+We get one resulting permno:
+
+\begin{center}
+\begin{tabular}{|r|}
+\hline
+\textit{permno} \\
+\hline
+75789 \\
+\hline
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%% c %%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{c)}
+In order to find the permno and the bid-ask spread of the stock with the smallest bid-ask apread when the colume is less than $1,000$, we use the following query:
+
+\color{blue}
+\begin{verbatim}
+SELECT permno, abs(bid-ask) AS spread
+FROM stocks2016.d2010
+WHERE vol < 1000
+ORDER BY spread ASC
+LIMIT 1;
+\end{verbatim}
+\color{black}
+
+We get one resulting row with the permno and the bid-ask spread:
+
+\begin{center}
+\begin{tabular}{|r | r|}
+\hline
+\textit{permno} & \textit{spread} \\
+\hline
+10001 & 0 \\
+\hline
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% question 6 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Question 6}
+%%%%%%%%%%%%%%%%%%%%%%% a %%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{a)}
+In order to get the company that had the highest net income, we use the following query:
+
+\color{blue}
+\begin{verbatim}
+SELECT tic
+FROM stocks2016.fnd
+WHERE netinc IS NOT null
+ORDER BY netinc DESC
+LIMIT 1;
+\end{verbatim}
+\color{black}
+
+We get one resulting tic:
+
+\begin{center}
+\begin{tabular}{|l|}
+\hline
+\textit{tic} \\
+\hline
+GM \\
+\hline
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%% b %%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{b)}
+In order to get the company that had the highest net income in fiscal year 2011, we use the following query:
+
+\color{blue}
+\begin{verbatim}
+SELECT tic
+FROM stocks2016.fnd
+WHERE fyear = 2011
+  AND netinc IS NOT null
+ORDER BY netinc DESC
+LIMIT 1;
+\end{verbatim}
+\color{black}
+
+We get one resulting tic:
+
+\begin{center}
+\begin{tabular}{|l|}
+\hline
+\textit{tic} \\
+\hline
+XOM \\
+\hline
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%% c %%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{c)}
+In order to get the company which had the lowest net income, we use the following query:
+
+\color{blue}
+\begin{verbatim}
+SELECT tic
+FROM stocks2016.fnd
+ORDER BY netinc ASC
+LIMIT 1;
+\end{verbatim}
+\color{black}
+
+We get one resulting tic:
+
+\begin{center}
+\begin{tabular}{|l|}
+\hline
+\textit{tic} \\
+\hline
+FNMA \\
+\hline
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%% d %%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{d)}
+In order to get the company which had the lowest net income in fiscal year 2011, we use the following query:
+
+\color{blue}
+\begin{verbatim}
+SELECT tic
+FROM stocks2016.fnd
+WHERE fyear = 2011
+ORDER BY netinc ASC
+LIMIT 1;
+\end{verbatim}
+\color{black}
+
+We get one resulting tic:
+
+\begin{center}
+\begin{tabular}{|l|}
+\hline
+\textit{tic} \\
+\hline
+FNMA \\
+\hline
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%% e %%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{e)}
+In order to get the company which had more than $1,000$ employees, had the highest net income per employee in 2011, we use the following query (note: emp is in thousands of employees):
+
+\color{blue}
+\begin{verbatim}
+SELECT tic
+FROM stocks2016.fnd
+WHERE emp > 1
+  AND fyear = 2011
+  AND netinc IS NOT null
+ORDER BY netinc/emp DESC
+LIMIT 1;
+\end{verbatim}
+\color{black}
+
+We get one resulting tic:
+
+\begin{center}
+\begin{tabular}{|l|}
+\hline
+\textit{tic} \\
+\hline
+CEO \\
+\hline
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%% f %%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{f)}
+In order the find the company which had a net-income per employee over \$$1,000$ had the largest number of employees, we use the following query (note: emp is in thousands of employees, and netinc is in millions of dollars):
+
+\color{blue}
+\begin{verbatim}
+SELECT tic
+FROM stocks2016.fnd
+WHERE emp > 0
+  AND netinc/emp > 1
+ORDER BY emp DESC
+LIMIT 1;
+\end{verbatim}
+\color{black}
+
+We get one resulting tic:
+
+\begin{center}
+\begin{tabular}{|l|}
+\hline
+\textit{tic} \\
+\hline
+WMT \\
+\hline
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+
+
+\end{document}

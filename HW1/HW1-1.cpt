@@ -1,0 +1,7 @@
+
+  \begin{minipage}{5cm}
+SELECT * \\
+FROM stocks2016.d2010 \\
+WHERE cusip = '45920010';
+  \end{minipage}
+^^E^^L 
