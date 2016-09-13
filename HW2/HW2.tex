@@ -1,0 +1,684 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{adjustbox}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{listings}
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{framed}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\newcommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+  \title{MSAN 691 - Homework 2}
+  \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+  \author{Christine Chu, Andre Guimaraes Duarte, Mikaela Hoffman-Stapleton, April Wang}
+  \preauthor{\centering\large\emph}
+  \postauthor{\par}
+  \predate{\centering\large\emph}
+  \postdate{\par}
+  \date{September 8, 2016}
+  
+% Redefines (sub)paragraphs to behave more like section*s
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+\usepackage{color}
+\usepackage{enumitem}
+
+\newenvironment{question}[2][Question]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\maketitle
+
+\begin{question}{1}
+Answer the following questions using the daily stock data.
+\begin{enumerate}[label=(\alph*)]
+\item Return a list of all the trading days in 2010.
+  \color{blue}
+\begin{verbatim}
+SELECT DISTINCT retdate
+FROM stocks2016.d2010;
+  \end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{l}
+\textit{retdate} \\
+\hline
+2010-04-26 \\
+2010-08-16 \\
+2010-06-16 \\
+2010-09-10 \\
+2010-12-02 \\
+2010-07-28 \\
+2010-02-12 \\
+2010-10-05 \\
+2010-07-01 \\
+2010-11-02 \\
+\ldots \\
+\end{tabular}
+
+\noindent (252 rows) \\
+\end{center}
+
+\item The cusip with the lowest Jan 11th volume that also appears on Dec. 1st.
+  \color{blue}
+\begin{verbatim}
+SELECT cusip FROM stocks2016.d2010
+WHERE retdate = '2010-01-11' AND cusip IN
+(SELECT cusip FROM stocks2016.d2010
+WHERE retdate = '2010-12-01')
+ORDER BY vol ASC
+LIMIT 1;
+  \end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{l}
+\textit{cusip} \\
+\hline
+41959620 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\item The lowest five cusips by volume from Jan. 11th, 2010 that have a volume between 1 and 10 million on Dec. 1st, 2011.
+  \color{blue}
+\begin{verbatim}
+SELECT cusip FROM stocks2016.d2010
+WHERE retdate = '2010-01-11' AND cusip IN
+(SELECT cusip FROM stocks2016.d2011
+WHERE retdate = '2011-12-01' AND vol BETWEEN 1000000 and 10000000)
+ORDER BY vol ASC
+LIMIT 5;
+  \end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{l}
+\textit{cusip} \\
+\hline
+04231550 \\
+81783N20 \\
+90187B10 \\
+69937430 \\
+19217610 \\
+\end{tabular}
+
+\noindent (5 rows) \\
+\end{center}
+
+\item Return the list of permco's that exist in 2011, but not in 2010.
+  \color{blue}
+\begin{verbatim}
+SELECT DISTINCT permco FROM stocks2016.d2011
+WHERE permco NOT IN
+(SELECT DISTINCT permco FROM stocks2016.d2010);
+  \end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{permco} \\
+\hline
+53655 \\
+53816 \\
+53964 \\
+53865 \\
+53662 \\
+53697 \\
+53847 \\
+53804 \\
+53732 \\
+53814 \\
+\ldots \\
+\end{tabular}
+
+\noindent (254 rows) \\
+\end{center}
+
+\item Of the permco's that existed in 2011, but not in 2010, which had the highest dollar volume traded day in 2011?
+  \color{blue}
+\begin{verbatim}
+SELECT permco FROM stocks2016.d2011
+WHERE vol*abs(prc) IS NOT null AND permco NOT IN
+(SELECT DISTINCT permco FROM stocks2016.d2010)
+ORDER BY vol*abs(prc) DESC
+LIMIT 1;
+  \end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{permco} \\
+\hline
+53616 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\item Return a list of the distinct cusips that were in the top 50 highest dollar value traded in 2011.
+  \color{blue}
+\begin{verbatim}
+SELECT DISTINCT cusip FROM
+(SELECT cusip FROM stocks2016.d2011
+WHERE vol*abs(prc) IS NOT null
+ORDER BY vol*abs(prc) DESC LIMIT 50) AS A;
+  \end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{l}
+\textit{cusip} \\
+\hline
+78462F10 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\item Of the cusips that were in the top 50 highest dollar value traded in 2011, which were also in the top 100 highest value traded in 2010?
+  \color{blue}
+\begin{verbatim}
+SELECT DISTINCT cusip FROM
+(SELECT cusip FROM stocks2016.d2010
+WHERE vol*abs(prc) IS NOT null
+ORDER BY vol*abs(prc) DESC LIMIT 100) AS A WHERE cusip IN
+(SELECT DISTINCT cusip FROM
+(SELECT cusip FROM stocks2016.d2011
+WHERE vol*abs(prc) IS NOT null
+ORDER BY vol*abs(prc) DESC LIMIT 50) AS B);
+  \end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{l}
+\textit{cusip} \\
+\hline
+78462F10 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\item Which permcos were in the top 500 of dollar trading volume on the 2nd, 3rd, and 4th days of Feb. 2011?
+  \color{blue}
+\begin{verbatim}
+SELECT DISTINCT permco FROM stocks2016.d2011 WHERE permco IN
+(SELECT permco FROM stocks2016.d2011 WHERE vol IS NOT null AND
+prc IS NOT null AND retdate = '2011-02-02' ORDER BY vol*abs(prc) DESC LIMIT 500)
+AND permco IN
+(SELECT permco FROM stocks2016.d2011 WHERE vol IS NOT null AND
+prc IS NOT null AND retdate = '2011-02-03' ORDER BY vol*abs(prc) DESC LIMIT 500)
+AND permco IN
+(SELECT permco FROM stocks2016.d2011 WHERE vol IS NOT null AND
+prc IS NOT null AND retdate = '2011-02-04' ORDER BY vol*abs(prc) DESC LIMIT 500);
+  \end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{permco} \\
+\hline
+39147 \\
+20566 \\
+20684 \\
+1543 \\
+20798 \\
+20745 \\
+53104 \\
+20468 \\
+44708 \\
+21793 \\
+\ldots \\
+\end{tabular}
+
+\noindent (339 rows) \\
+\end{center}
+
+\item Of the permcos that had volume between 100,000 and 1,000,000 on the 2nd and 3rd of Feb. 2011, which had volume greater than 5,000,000 on the 4th on Feb.?
+  \color{blue}
+\begin{verbatim}
+SELECT DISTINCT permco FROM stocks2016.d2011 WHERE permco IN
+(SELECT permco FROM stocks2016.d2011
+WHERE vol BETWEEN 100000 AND 1000000 AND retdate = '2011-02-02')
+AND permco IN
+(SELECT permco FROM stocks2016.d2011
+WHERE vol BETWEEN 100000 AND 1000000 AND retdate = '2011-02-03')
+AND permco IN
+(SELECT permco FROM stocks2016.d2011
+WHERE vol > 5000000 AND retdate = '2011-02-04');
+  \end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{permco} \\
+\hline
+39147 \\
+53104 \\
+44072 \\
+2589 \\
+37493 \\
+47872 \\
+52915 \\
+31600 \\
+50846 \\
+50699 \\
+46431 \\
+53101 \\
+16762 \\
+51814 \\
+\end{tabular}
+
+\noindent (14 rows) \\
+\end{center}
+
+\end{enumerate}
+\end{question}
+
+\begin{question}{2}
+Answer the following questions using the fnd table.
+\begin{enumerate}[label=(\alph*)]
+\item Of the stocks that have a net income to employee ratio greater than \$1,000 in fiscal year 2010, which have a net income between 20 and 30 million dollars in 2011?
+  \color{blue}
+\begin{verbatim}
+SELECT tic FROM stocks2016.fnd
+WHERE fyear = 2011 AND netinc BETWEEN 20 AND 30 AND tic IN
+(SELECT tic FROM stocks2016.fnd
+WHERE netinc/emp > 1 AND emp > 0 AND fyear = 2010);
+  \end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{l}
+\textit{tic} \\
+\hline
+AE \\
+ATRI \\
+AVD \\
+AP \\
+AROBF \\
+ATRO \\
+BGG \\
+CTS \\
+CMN \\
+CPK \\
+\ldots \\
+\end{tabular}
+
+\noindent (224 rows) \\
+\end{center}
+
+\item Of the stocks that have a net income to revenue ratio greater than 20\%, which have more than 25,000 employees in fiscal year 2011?
+  \color{blue}
+\begin{verbatim}
+SELECT tic FROM stocks2016.fnd
+WHERE fyear = 2011 AND emp > 25 AND tic IN
+(SELECT tic FROM stocks2016.fnd
+WHERE netinc/rev > .2 AND rev <> 0);
+  \end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{l}
+\textit{tic} \\
+\hline
+AIG \\
+AAPL \\
+BMY \\
+KO \\
+GLW \\
+USB \\
+GM \\
+INTC \\
+JNJ \\
+LLY \\
+\ldots \\
+\end{tabular}
+
+\noindent (52 rows) \\
+\end{center}
+
+\item Of the stocks that have profit margin greater than 20\% in 2010, which had a profit margin greater than 30\% in fiscal year 2011?
+  \color{blue}
+\begin{verbatim}
+SELECT tic FROM stocks2016.fnd
+WHERE netinc/rev > .3 AND rev <> 0 AND fyear = 2011 AND tic IN
+(SELECT tic FROM stocks2016.fnd
+WHERE netinc/rev > .2 AND rev <> 0 AND fyear = 2010);
+  \end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{l}
+\textit{tic} \\
+\hline
+ALX \\
+AXP1 \\
+APAGF \\
+AOXY \\
+ATW \\
+ABX \\
+CGP1 \\
+GLW \\
+DMLP \\
+GNI \\
+\ldots \\
+\end{tabular}
+
+\noindent (283 rows) \\
+\end{center}
+
+\item Of the stocks that have a net-income to employee ratio greater than \$1,000 in fiscal year 2010 and more than 1,000 employees in 2011, what is the highest profit margin in fiscal year 2011 and what is the ticker symbol?
+  \color{blue}
+\begin{verbatim}
+SELECT tic, netinc/rev AS profit_margin FROM stocks2016.fnd
+WHERE emp > 1 AND fyear = 2011 AND rev <> 0
+AND netinc/rev IS NOT null AND tic IN
+(SELECT tic FROM stocks2016.fnd
+WHERE netinc/emp > 1 AND emp > 0 AND fyear = 2010)
+ORDER BY profit_margin DESC LIMIT 1;
+  \end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{l | r}
+\textit{tic} & \textit{profit\_margin} \\
+\hline
+BOWFF & 2.89805477293856 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\item Of the stocks that have a net-income to employee ratio greater than \$1,000 in fiscal year 2010 and more than 1,000 employees in 2011, what is the lowest profit margin in fiscal year 2011?
+  \color{blue}
+\begin{verbatim}
+SELECT netinc/rev AS profit_margin FROM stocks2016.fnd
+WHERE fyear = 2011 AND emp > 1 AND rev <> 0
+AND netinc/rev IS NOT null AND tic IN
+(SELECT tic FROM stocks2016.fnd
+WHERE netinc/emp > 1 AND emp > 0 AND fyear = 2010)
+ORDER BY profit_margin ASC LIMIT 1;
+  \end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{profit\_margin} \\
+\hline
+-2.13162877220126 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\item Of the stocks that have a net-income to employee ratio greater than \$1,000 in fiscal year 2010 and between 1,000 and 2,000 employees in 2011, what is the highest profit margin i fiscal year 2011 and what is the ticker symbol?
+  \color{blue}
+\begin{verbatim}
+SELECT tic, netinc/rev AS profit_margin FROM stocks2016.fnd
+WHERE fyear = 2011 AND emp BETWEEN 1 AND 2 AND rev <> 0
+AND netinc/emp IS NOT null AND tic IN
+(SELECT tic FROM stocks2016.fnd
+WHERE netinc/emp > 1 AND emp > 0 AND fyear = 2010)
+ORDER BY profit_margin DESC LIMIT 1;
+  \end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{l | r}
+\textit{tic} & \textit{profit\_margin} \\
+\hline
+BOWFF & 2.89805477293856 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\item For companies with revenue between 1 and 2 million dollars in 2010, what company has the highest turnover in 2011?
+  \color{blue}
+\begin{verbatim}
+SELECT tic FROM stocks2016.fnd
+WHERE fyear = 2011 AND invt > 0 AND rev/invt IS NOT null AND tic IN
+(SELECT tic FROM stocks2016.fnd
+WHERE rev BETWEEN 1 AND 2 AND fyear = 2010)
+ORDER BY rev/invt DESC LIMIT 1;
+  \end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{l}
+\textit{tic} \\
+\hline
+PRVW \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\item Of the companies with turnover between 1 and 2 in 2010, which companies also had a net income to employee ratio greater than \$1,000 in 2010?
+  \color{blue}
+\begin{verbatim}
+SELECT tic FROM stocks2016.fnd
+WHERE netinc/emp > 1 AND emp > 0 AND fyear = 2010
+AND rev/invt BETWEEN 1 AND 2 AND invt > 0;
+  \end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{l}
+\textit{tic} \\
+\hline
+FEIM \\
+ALLY \\
+HOV \\
+MFCB \\
+WFC \\
+VIDE \\
+ZGCO \\
+CGC \\
+TIF \\
+ANFI \\
+\ldots \\
+\end{tabular}
+
+\noindent (68 rows) \\
+\end{center}
+
+\item Of the companies with turnover between 1 and 2 in 2010, which companies also had a net income to employee ratio greater than \$1,000 in 2011?
+  \color{blue}
+\begin{verbatim}
+SELECT tic FROM stocks2016.fnd
+WHERE netinc/emp > 1 AND emp > 0 AND fyear = 2011 AND tic IN
+(SELECT tic FROM stocks2016.fnd
+WHERE rev/invt BETWEEN 1 AND 2 AND invt > 0 AND fyear = 2010);
+  \end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{l}
+\textit{tic} \\
+\hline
+HURC \\
+MFCB \\
+MCPIQ \\
+WFC \\
+ZGCO \\
+CXA.B \\
+BMO \\
+HGBL \\
+RTI \\
+CPF \\
+\ldots \\
+\end{tabular}
+
+\noindent (68 rows) \\
+\end{center}
+
+\item Which companies, in fiscal year 2010 had a profit margin greater than 20\%, turnover more than 2 and more than 10,000 employees?
+  \color{blue}
+\begin{verbatim}
+SELECT conm FROM stocks2016.fnd
+WHERE fyear = 2010 AND netinc/rev > .2 AND rev <> 0
+AND rev/invt > 2 AND invt > 0 AND emp > 10;
+  \end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{l}
+\textit{conm} \\
+\hline
+AMGEN INC \\
+APPLE INC \\
+RESOLUTE FOREST PRODUCTS INC \\
+CANADIAN NATIONAL RAILWAY CO \\
+COCA-COLA CO \\
+MOLSON COORS BREWING CO \\
+CORNING INC \\
+HYDRO QUEBEC \\
+INTEL CORP \\
+SMURFIT-STONE CONTAINER CORP \\
+\ldots \\
+\end{tabular}
+
+\noindent (51 rows) \\
+\end{center}
+
+\end{enumerate}
+\end{question}
+
+\begin{question}{3}
+Write a single query which generates a dataset with the specified columns.
+\begin{enumerate}[label=(\alph*)]
+\item 
+  \color{blue}
+\begin{verbatim}
+SELECT conm, tic, rev, invt, emp,
+CASE
+  WHEN invt > 0 AND rev/invt > 2 THEN 1
+  ELSE 0
+END AS turnflag
+FROM stocks2016.fnd
+WHERE fyear = 2010 AND rev > 0 AND invt > 0 AND emp > 0 AND conm IN
+(SELECT conm FROM stocks2016.fnd
+WHERE rev > 0 AND invt > 0 AND emp > 0 AND fyear = 2011);
+  \end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{l | l | r | r | r | r}
+\textit{conm} & \textit{tic} & \textit{rev} & \textit{invt} & \textit{emp} & \textit{turnflag} \\
+\hline
+AMERICAN AIRLINES GROUP INC & AAL & 22170 & 594 & 78.25 & 1 \\
+CECO ENVIRONMENTAL CORP & CECE & 140.602 & 12.777 & 0.556 & 1 \\
+PINNACLE WEST CAPITAL CORP & PNW & 3263.645 & 202.989 & 6.74 & 1 \\
+AARON'S INC & AAN & 1876.847 & 11.2 & 10.4 & 1 \\
+ABBOTT LABORATORIES & ABT & 35166.721 & 3188.734 & 90 & 1 \\
+ACETO CORP & ACET & 346.631 & 74.857 & 0.216 & 1 \\
+ACME UNITED CORP & ACU & 63.149 & 22.292 & 0.132 & 1 \\
+RELM WIRELESS CORP & RWC & 25.954 & 11.942 & 0.096 & 1 \\
+ADAMS RESOURCES \& ENERGY INC & AE & 2211.97 & 14.591 & 0.74 & 1 \\
+ADVANCED MICRO DEVICES & AMD & 6494 & 632 & 11.1 & 1 \\
+\ldots & \ldots & \ldots & \ldots & \ldots & \ldots \\
+\end{tabular}
+
+\noindent (3934 rows) \\
+\end{center}
+
+\item 
+  \color{blue}
+\begin{verbatim}
+SELECT conm, tic, rev, invt, emp,
+CASE
+  WHEN invt > 0 AND rev/invt BETWEEN 2 AND 3 THEN 1
+  WHEN invt > 0 AND rev/invt BETWEEN 3 AND 4 THEN 2
+  WHEN invt > 0 AND rev/invt > 4 THEN 5
+  ELSE 0
+END AS invtflag,
+CASE
+  WHEN rev <> 0 AND netinc/rev < .2 AND invt > 0 AND rev/invt > 2 THEN 1
+  WHEN rev <> 0 AND netinc/rev > .4 AND invt > 0 AND rev/invt > 2 THEN 2
+  ELSE 0
+END AS invtProfit,
+CASE
+  WHEN rev <> 0 AND netinc/rev BETWEEN .2 AND .4 AND emp > 10 THEN 0
+  WHEN rev <> 0 AND netinc/rev < .2 THEN netinc/rev
+  WHEN rev <> 0 AND netinc/rev > .4 AND emp IS NOT null THEN 2*emp
+  ELSE -1
+END AS EmployeeProfit
+FROM stocks2016.fnd
+WHERE fyear = 2010 OR fyear = 2011;
+  \end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{adjustbox}{width=1.2\linewidth,totalheight=4in, center}
+\begin{tabular}{l | l | r | r | r | r | r | r}
+\textit{conm} & \textit{tic} & \textit{rev} & \textit{invt} & \textit{emp} & \textit{invtflag} & \textit{invtprofit} & \textit{employeeprofit} \\
+\hline
+AAR CORP & AIR & 1775.782 & 507.274 & 6.1 & 2 & 1 & 0.0393212680385318 \\
+ADC TELECOMMUNICATIONS INC & ADCT & 1156.6 & 106.4 & 9.3 & 5 & 1 & 0.0536053951236383 \\
+AMERICAN AIRLINES GROUP INC & AAL & 22170 & 594 & 78.25 & 5 & 1 & -0.0212449255751015 \\
+AMERICAN AIRLINES GROUP INC & AAL & 24022 & 617 & 80.1 & 5 & 1 & -0.0823828157522271 \\
+CECO ENVIRONMENTAL CORP & CECE & 140.602 & 12.777 & 0.556 & 5 & 1 & 0.0149713375343167 \\
+CECO ENVIRONMENTAL CORP & CECE & 139.192 & 14.987 & 0.524 & 5 & 1 & 0.0594287027990114 \\
+ASA GOLD AND PRECIOUS METALS & ASA & 4.956 & 0 &  & 0 & 0 & -1 \\
+ASA GOLD AND PRECIOUS METALS & ASA & 6.003 & 0 &  & 0 & 0 & -5.32750291520906 \\
+AVX CORP & AVX & 1653.176 & 496.495 & 11.2 & 2 & 1 & 0.147596505151297 \\
+PINNACLE WEST CAPITAL CORP & PNW & 3263.645 & 202.989 & 6.74 & 5 & 1 & 0.107258295556042 \\
+\ldots & \ldots & \ldots & \ldots & \ldots & \ldots & \ldots & \ldots \\
+\end{tabular}
+\end{adjustbox}
+
+\noindent (21553 rows) \\
+\end{center}
+
+
+\end{enumerate}
+\end{question}
+ 
+% --------------------------------------------------------------
+%     You don't have to mess with anything below this line.
+% --------------------------------------------------------------
+ 
+\end{document}

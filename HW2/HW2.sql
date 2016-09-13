@@ -1,105 +1,169 @@
 ﻿--1
 --a
-select distinct retdate from stocks2016.d2010;
+SELECT DISTINCT retdate
+FROM stocks2016.d2010;
 --b
-select cusip from stocks2016.d2010 where retdate = '2010-01-11' and
-cusip in (select cusip from stocks2016.d2010 where retdate = '2010-12-01')
-order by vol asc limit 1;
+SELECT cusip FROM stocks2016.d2010
+WHERE retdate = '2010-01-11' AND cusip IN
+(SELECT cusip FROM stocks2016.d2010
+WHERE retdate = '2010-12-01')
+ORDER BY vol ASC
+LIMIT 1;
 --c
-select cusip from stocks2016.d2010 where retdate = '2010-01-11' and
-cusip in (select cusip from stocks2016.d2011 where retdate = '2011-12-01'
-and vol between 1000000 and 10000000) order by vol asc limit 5;
+SELECT cusip FROM stocks2016.d2010
+WHERE retdate = '2010-01-11' AND cusip IN
+(SELECT cusip FROM stocks2016.d2011
+WHERE retdate = '2011-12-01' AND vol BETWEEN 1000000 and 10000000)
+ORDER BY vol ASC
+LIMIT 5;
 --d
-select distinct permco from stocks2016.d2011 where permco not in (select
-distinct permco from stocks2016.d2010);
+SELECT DISTINCT permco FROM stocks2016.d2011
+WHERE permco NOT IN
+(SELECT DISTINCT permco FROM stocks2016.d2010);
 --e
-select permco from stocks2016.d2011 where permco not in (select
-distinct permco from stocks2016.d2010) and vol is not null
-order by vol desc limit 1;
+SELECT permco FROM stocks2016.d2011
+WHERE vol*abs(prc) IS NOT null AND permco NOT IN
+(SELECT DISTINCT permco FROM stocks2016.d2010)
+ORDER BY vol*abs(prc) DESC
+LIMIT 1;
 --f
-select distinct cusip from (select * from stocks2016.d2011 where vol is not
-null order by vol desc) as A limit 50;
+/*
+select cusip from
+(select distinct cusip, max(vol*abs(prc)) as max_dollar_volume from
+(select * from stocks2016.d2011 where vol is not null and prc is not null) as A
+group by cusip order by max(vol*abs(prc)) desc limit 50) as A;
+*/
+SELECT DISTINCT cusip FROM
+(SELECT cusip FROM stocks2016.d2011
+WHERE vol*abs(prc) IS NOT null
+ORDER BY vol*abs(prc) DESC LIMIT 50) AS A;
 --g
-select cusip from (
-select distinct cusip from (select * from stocks2016.d2011 where vol is not
-null order by vol desc) as A limit 50) as B where cusip in (
-select distinct cusip from (select * from stocks2016.d2010 where vol is not
-null order by vol desc) as C limit 100);
+/*
+select cusip from
+(select distinct cusip, max(vol*abs(prc)) as max_dollar_volume from
+(select * from stocks2016.d2011 where vol is not null and prc is not null) as A
+group by cusip order by max(vol*abs(prc)) desc limit 50) as top502011
+where cusip in
+(select cusip from
+(select distinct cusip, max(vol*abs(prc)) as max_dollar_volume from
+(select * from stocks2016.d2010 where vol is not null and prc is not null) as A
+group by cusip order by max(vol*abs(prc)) desc limit 100) as top1002010);
+*/
+SELECT DISTINCT cusip FROM
+(SELECT cusip FROM stocks2016.d2010
+WHERE vol*abs(prc) IS NOT null
+ORDER BY vol*abs(prc) DESC LIMIT 100) AS A WHERE cusip IN
+(SELECT DISTINCT cusip FROM
+(SELECT cusip FROM stocks2016.d2011
+WHERE vol*abs(prc) IS NOT null
+ORDER BY vol*abs(prc) DESC LIMIT 50) AS B);
 --h
-select distinct permno from stocks2016.d2011 where permno in
-(select permno from stocks2016.d2011 where vol is not null and
-retdate = '2011-02-02' order by vol desc limit 500)
-and permno in
-(select permno from stocks2016.d2011 where vol is not null and
-retdate = '2011-02-03' order by vol desc limit 500)
-and permno in
-(select permno from stocks2016.d2011 where vol is not null and
-retdate = '2011-02-04' order by vol desc limit 500);
+SELECT DISTINCT permco FROM stocks2016.d2011 WHERE permco IN
+(SELECT permco FROM stocks2016.d2011 WHERE vol IS NOT null AND
+prc IS NOT null AND retdate = '2011-02-02' ORDER BY vol*abs(prc) DESC LIMIT 500)
+AND permco IN
+(SELECT permco FROM stocks2016.d2011 WHERE vol IS NOT null AND
+prc IS NOT null AND retdate = '2011-02-03' ORDER BY vol*abs(prc) DESC LIMIT 500)
+AND permco IN
+(SELECT permco FROM stocks2016.d2011 WHERE vol IS NOT null AND
+prc IS NOT null AND retdate = '2011-02-04' ORDER BY vol*abs(prc) DESC LIMIT 500);
 --i
-select distinct permno from stocks2016.d2011 where permno in
-(select permno from stocks2016.d2010 where vol between 100000
-and 1000000 and retdate = '2010-02-02')
-and permno in
-(select permno from stocks2016.d2010 where vol between 100000
-and 1000000 and retdate = '2010-02-03')
-and permno in
-(select permno from stocks2016.d2010 where vol > 5000000
-and retdate = '2010-02-04');
+SELECT DISTINCT permco FROM stocks2016.d2011 WHERE permco IN
+(SELECT permco FROM stocks2016.d2011
+WHERE vol BETWEEN 100000 AND 1000000 AND retdate = '2011-02-02')
+AND permco IN
+(SELECT permco FROM stocks2016.d2011
+WHERE vol BETWEEN 100000 AND 1000000 AND retdate = '2011-02-03')
+AND permco IN
+(SELECT permco FROM stocks2016.d2011
+WHERE vol > 5000000 AND retdate = '2011-02-04');
 
 --2
 --a
-select distinct tic from stocks2016.fnd where netinc between 20 and 30 and
-fyear = 2011 and tic in (select tic from stocks2016.fnd where fyear = 2010
-and emp > 0 and netinc/emp > 1);
+SELECT tic FROM stocks2016.fnd
+WHERE fyear = 2011 AND netinc BETWEEN 20 AND 30 AND tic IN
+(SELECT tic FROM stocks2016.fnd
+WHERE netinc/emp > 1 AND emp > 0 AND fyear = 2010);
 --b
-select distinct tic from stocks2016.fnd where emp > 25 and fyear = 2011
-and tic in (select tic from stocks2016.fnd where fyear = 2011 and 
-netinc/rev > 0.2 and rev != 0);
+SELECT tic FROM stocks2016.fnd
+WHERE fyear = 2011 AND emp > 25 AND tic IN
+(SELECT tic FROM stocks2016.fnd
+WHERE netinc/rev > .2 AND rev <> 0);
 --c
-select distinct tic from stocks2016.fnd where netinc/rev > 0.3 and
-rev != 0 and fyear = 2011 and tic in (select tic from stocks2016.fnd
-where netinc/rev > 0.2 and rev != 0 and fyear = 2010);
+SELECT tic FROM stocks2016.fnd
+WHERE netinc/rev > .3 AND rev <> 0 AND fyear = 2011 AND tic IN
+(SELECT tic FROM stocks2016.fnd
+WHERE netinc/rev > .2 AND rev <> 0 AND fyear = 2010);
 --d
-select tic, netinc/rev as profit_margin from stocks2016.fnd where rev != 0
-and fyear = 2011 and emp > 1 and tic in (select tic from stocks2016.fnd where 
-emp > 0 and netinc/emp > 1 and fyear = 2010) order by
-profit_margin desc limit 1;
+SELECT tic, netinc/rev AS profit_margin FROM stocks2016.fnd
+WHERE emp > 1 AND fyear = 2011 AND rev <> 0
+AND netinc/rev IS NOT null AND tic IN
+(SELECT tic FROM stocks2016.fnd
+WHERE netinc/emp > 1 AND emp > 0 AND fyear = 2010)
+ORDER BY profit_margin DESC LIMIT 1;
 --e
-select netinc/rev as profit_margin from stocks2016.fnd where rev != 0
-and fyear = 2011 and emp > 1 and tic in (select tic from stocks2016.fnd where 
-emp > 0 and netinc/emp > 1 and fyear = 2010) order by
-profit_margin asc limit 1;
+SELECT netinc/rev AS profit_margin FROM stocks2016.fnd
+WHERE fyear = 2011 AND emp > 1 AND rev <> 0
+AND netinc/rev IS NOT null AND tic IN
+(SELECT tic FROM stocks2016.fnd
+WHERE netinc/emp > 1 AND emp > 0 AND fyear = 2010)
+ORDER BY profit_margin ASC LIMIT 1;
 --f
-select tic, netinc/rev as profit_margin from stocks2016.fnd where rev != 0
-and fyear = 2011 and emp between 1 and 2 and tic in (select tic from
-stocks2016.fnd where emp > 0 and netinc/emp > 1 and fyear = 2010) order by
-profit_margin desc limit 1;
+SELECT tic, netinc/rev AS profit_margin FROM stocks2016.fnd
+WHERE fyear = 2011 AND emp BETWEEN 1 AND 2 AND rev <> 0
+AND netinc/emp IS NOT null AND tic IN
+(SELECT tic FROM stocks2016.fnd
+WHERE netinc/emp > 1 AND emp > 0 AND fyear = 2010)
+ORDER BY profit_margin DESC LIMIT 1;
 --g
-select tic from stocks2016.fnd where fyear = 2011 and invt > 0 and tic in
-(select tic from stocks2016.fnd where rev between 1 and 2 and fyear = 2010)
-order by rev/invt desc limit 1;
+SELECT tic FROM stocks2016.fnd
+WHERE fyear = 2011 AND invt > 0 AND rev/invt IS NOT null AND tic IN
+(SELECT tic FROM stocks2016.fnd
+WHERE rev BETWEEN 1 AND 2 AND fyear = 2010)
+ORDER BY rev/invt DESC LIMIT 1;
 --h
-select distinct tic from stocks2016.fnd where fyear = 2010 and invt > 0 and
-rev/invt between 1 and 2 and emp > 0 and netinc/emp > 1 and fyear = 2010;
+SELECT tic FROM stocks2016.fnd
+WHERE netinc/emp > 1 AND emp > 0 AND fyear = 2010
+AND rev/invt BETWEEN 1 AND 2 AND invt > 0;
 --i
-select distinct tic from stocks2016.fnd where tic in (select tic from
-stocks2016.fnd where fyear = 2010 and invt > 0 and rev/invt between 1
-and 2) and emp > 0 and netinc/emp > 1 and fyear = 2011;
+SELECT tic FROM stocks2016.fnd
+WHERE netinc/emp > 1 AND emp > 0 AND fyear = 2011 AND tic IN
+(SELECT tic FROM stocks2016.fnd
+WHERE rev/invt BETWEEN 1 AND 2 AND invt > 0 AND fyear = 2010);
 --j
-select distinct conm from stocks2016.fnd where fyear = 2010 and rev != 0
-and netinc/rev > 0.2 and invt > 0 and rev/invt > 2 and emp > 10;
+SELECT conm FROM stocks2016.fnd
+WHERE fyear = 2010 AND netinc/rev > .2 AND rev <> 0
+AND rev/invt > 2 AND invt > 0 AND emp > 10;
 
 --3
 --a
---select conm, tic, rev, invt, emp from stocks2016.fnd where fyear = 2010;
+SELECT conm, tic, rev, invt, emp,
+CASE
+  WHEN invt > 0 AND rev/invt > 2 THEN 1
+  ELSE 0
+END AS turnflag
+FROM stocks2016.fnd
+WHERE fyear = 2010 AND rev > 0 AND invt > 0 AND emp > 0 AND conm IN
+(SELECT conm FROM stocks2016.fnd
+WHERE rev > 0 AND invt > 0 AND emp > 0 AND fyear = 2011);
 --b
-
-
-
-
-
-
-
-
-
-
+SELECT conm, tic, rev, invt, emp,
+CASE
+  WHEN invt > 0 AND rev/invt BETWEEN 2 AND 3 THEN 1
+  WHEN invt > 0 AND rev/invt BETWEEN 3 AND 4 THEN 2
+  WHEN invt > 0 AND rev/invt > 4 THEN 5
+  ELSE 0
+END AS invtflag,
+CASE
+  WHEN rev <> 0 AND netinc/rev < .2 AND invt > 0 AND rev/invt > 2 THEN 1
+  WHEN rev <> 0 AND netinc/rev > .4 AND invt > 0 AND rev/invt > 2 THEN 2
+  ELSE 0
+END AS invtProfit,
+CASE
+  WHEN rev <> 0 AND netinc/rev BETWEEN .2 AND .4 AND emp > 10 THEN 0
+  WHEN rev <> 0 AND netinc/rev < .2 THEN netinc/rev
+  WHEN rev <> 0 AND netinc/rev > .4 AND emp IS NOT null THEN 2*emp
+  ELSE -1
+END AS EmployeeProfit
+FROM stocks2016.fnd
+WHERE fyear = 2010 OR fyear = 2011;
