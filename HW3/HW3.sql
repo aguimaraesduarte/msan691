@@ -3,10 +3,10 @@
 SELECT COUNT(*) AS numrows
 FROM stocks2016.d2010;
 --b
-SELECT ct (distinct cusip) AS numcusips2010
+SELECT count(distinct cusip) AS numcusips2010
 FROM stocks2016.d2010;
 --c
-SELECT ct (distinct cusip) AS numcusips2011
+SELECT count(distinct cusip) AS numcusips2011
 FROM stocks2016.d2011;
 --d
 SELECT cusip
