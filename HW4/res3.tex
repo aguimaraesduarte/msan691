@@ -1,0 +1,24 @@
+SELECT permno, permco,
+ (MAX(prc_last_)-MAX(prc_first))/MAX(prc_first) AS yearly_ret2010
+FROM
+ (SELECT *,
+   CASE
+     WHEN retdate_epoch = retdate_first THEN prc
+   END AS prc_first,
+   CASE
+     WHEN retdate_epoch = retdate_last THEN prc
+   END AS prc_last_
+ FROM
+   (SELECT permno, permco, prc,
+     date_part('epoch', retdate) AS retdate_epoch
+   FROM stocks2016.d2010) AS LHS
+ LEFT JOIN
+   (SELECT permno, permco,
+     MIN(date_part('epoch', retdate)) AS retdate_first,
+     MAX(date_part('epoch', retdate)) AS retdate_last_
+   FROM stocks2016.d2010
+   WHERE prc IS NOT null 
+   GROUP BY permno, permco) AS RHS
+ USING (permno, permco)
+ WHERE retdate_epoch = retdate_first OR retdate_epoch = retdate_last_) AS A
+GROUP BY permno, permco;

@@ -1,0 +1,70 @@
+select permno, permco, abs(yearly_return_2010-yearly_return_2011) as reversechange
+from
+(SELECT permno, permco, abs((lstdayprc-frtdayprc)/frtdayprc) AS yearly_return_2010
+FROM(
+SELECT
+ permno, permco,
+ SUM(CASE WHEN frtday=retdate THEN prc ELSE 0 END) AS frtdayprc,
+ SUM(CASE WHEN lstday=retdate THEN prc ELSE 0 END) AS lstdayprc
+FROM(
+SELECT * FROM
+(SELECT permno, permco, min(retdate) as frtday, max(retdate) as lstday from stocks2016.d2010
+where prc is not null
+GROUP BY 1,2) AS LLHS
+LEFT JOIN
+(SELECT permno, permco, prc, retdate from stocks2016.d2010) AS LRHS
+USING(permno, permco)
+WHERE(LRHS.retdate=LLHS.frtday OR LRHS.retdate=LLHS.lstday)
+) AS TEMP
+GROUP BY 1,2
+) AS TEMP2
+WHERE frtdayprc!=0) AS LLLHS
+inner join
+(SELECT permno, permco, abs((lstdayprc-frtdayprc)/frtdayprc) AS yearly_return_2011
+FROM(
+SELECT
+ permno, permco,
+ SUM(CASE WHEN frtday=retdate THEN prc ELSE 0 END) AS frtdayprc,
+ SUM(CASE WHEN lstday=retdate THEN prc ELSE 0 END) AS lstdayprc
+FROM(
+SELECT * FROM
+(SELECT permno, permco, min(retdate) as frtday, max(retdate) as lstday from stocks2016.d2011
+where prc is not null
+GROUP BY 1,2) AS RLHS
+LEFT JOIN
+(SELECT permno, permco, prc, retdate from stocks2016.d2011) AS RRHS
+USING(permno, permco)
+WHERE(RRHS.retdate=RLHS.frtday OR RRHS.retdate=RLHS.lstday)
+) AS TEMP
+GROUP BY 1,2
+) AS TEMP2
+WHERE frtdayprc!=0) AS RRRHS
+using (permno, permco)
+order by 3 desc
+limit 5;
+\begin{tabular}{r | r | r}
+\textit{permno} & \textit{permco} & \textit{reversechange} \\
+\hline
+80625 & 13139 & 36.4589552238806 \\
+85047 & 15532 & 29.1259259259259 \\
+11056 & 8926 & 28.041465051111 \\
+83551 & 14615 & 26.6631704885344 \\
+92282 & 52760 & 23.127992765918 \\
+\end{tabular}
+
+\noindent (5 rows) \\
+
+SELECT LHS_tic AS tic,
+ sum(CASE
+   WHEN RHS_tic < LHS_tic THEN 1
+   ELSE 0
+ END) AS num_before
+FROM
+ (SELECT * FROM
+   (SELECT DISTINCT tic AS LHS_tic FROM stocks2016.fnd
+   WHERE tic IS NOT null AND fyear = 2010) AS LHS
+ CROSS JOIN
+   (SELECT DISTINCT tic AS RHS_tic FROM stocks2016.fnd
+   WHERE tic IS NOT null AND fyear = 2010) AS RHS) AS A
+GROUP BY 1
+ORDER BY 1;

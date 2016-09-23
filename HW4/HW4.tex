@@ -1,0 +1,1417 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{adjustbox}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{listings}
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{framed}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, AND it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle commAND for use in maketitle
+\newcommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+  \title{MSAN 691 - Homework 4}
+  \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+  \author{Christine Chu, Andre Guimaraes Duarte, Mikaela Hoffman-Stapleton, April Wang}
+  \preauthor{\centering\large\emph}
+  \postauthor{\par}
+  \predate{\centering\large\emph}
+  \postdate{\par}
+  \date{September 22, 2016}
+  
+% Redefines (sub)paragraphs to behave more like section*s
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+\usepackage{color}
+\usepackage{enumitem}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\maketitle
+
+\paragraph{4.1\ Linking Stocks to Fundamental Data}
+
+\paragraph{4.1.1}
+
+\paragraph{1} 
+
+\color{blue}
+\begin{verbatim}
+SELECT rev, netinc, cash
+FROM stocks2016.fnd
+WHERE conm = 'APPLE INC'
+AND fyear = 2010;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r | r | r}
+\textit{rev} & \textit{netinc} & \textit{cash} \\
+\hline
+65225 & 14013 & 11261 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\paragraph{2} 
+
+
+
+\paragraph{3} 
+
+\color{blue}
+\begin{verbatim}
+SELECT *
+FROM stocks2016.d2010
+WHERE lpad(cusip,8,'0') = (SELECT DISTINCT lpad(cusip,8,'0')
+  FROM stocks2016.fnd
+  WHERE conm = 'APPLE INC');
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r | r | r | r | r | r | r | r }
+\textit{cusip} & \textit{permno} & \textit{permco} & \textit{issuno} & \textit{hsic} & \textit{retdate} & \textit{bid} & \textit{ask} \\
+\hline
+03783310 & 14593 & 7 & 8 & 3571 & 2010-01-04 & 212.38 & 214.5  \\
+03783310 & 14593 & 7 & 8 & 3571 & 2010-01-05 & 213.25 & 215.59  \\
+03783310 & 14593 & 7 & 8 & 3571 & 2010-01-06 & 210.75 & 215.23  \\ 
+03783310 & 14593 & 7 & 8 & 3571 & 2010-01-07 & 209.05 & 212  \\
+03783310 & 14593 & 7 & 8 & 3571 & 2010-01-08 & 209.06 & 212  \\
+\ldots \\
+\end{tabular}
+
+\noindent (252 rows) \\
+\end{center}
+
+\paragraph{4} 
+
+\color{blue}
+\begin{verbatim}
+SELECT *
+FROM stocks2016.lnk
+WHERE lpad(gvkey,6,'0') = (SELECT DISTINCT gvkey
+  FROM stocks2016.fnd
+  WHERE conm = 'APPLE INC')
+AND linktype in ('LU', 'LC')
+AND linkprim in ('P', 'C');
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{l | l | l | l | r | r | r | l | l}
+\textit{gvkey} & \textit{linkprim} & \textit{liid} & \textit{linktype} & \textit{lpermno} & \textit{lpermco} & \textit{usedflag} & \textit{linkdt} & \textit{linkenddt} \\
+\hline
+1690 & P & 1 & LU & 14593 & 7 & 1 & 1980-12-12 & E \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\paragraph{5} 
+
+\color{blue}
+\begin{verbatim}
+SELECT *
+FROM 
+(stocks2016.d2010) AS lhs
+LEFT JOIN
+(SELECT gvkey,
+        liid,
+        linkdt,
+        CASE
+          WHEN linkenddt = 'E' THEN now()::TEXT
+          ELSE linkenddt
+        END,
+        linkprim,
+        linktype,
+        lpermco,
+        lpermno,
+        usedflag
+  FROM stocks2016.lnk) AS rhs
+ON lhs.permno = rhs.lpermno
+  AND lhs.permco = rhs.lpermco
+  AND date_part('epoch',lhs.retdate) 
+    BETWEEN date_part('epoch',linkdt) AND date_part('epoch', linkenddt::DATE)
+WHERE lpad(RHS.gvkey,6,'0') = (SELECT DISTINCT gvkey
+  FROM stocks2016.fnd
+  WHERE conm = 'APPLE INC');
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r | r | r | r | r | r | r | r }
+\textit{cusip} & \textit{permno} & \textit{permco} & \textit{issuno} & \textit{hsic} & \textit{retdate} & \textit{bid} & \textit{ask} \\
+\hline
+03783310 & 14593 & 7 & 8 & 3571 & 2010-01-04 & 212.38 & 214.5\\
+03783310 & 14593 & 7 & 8 & 3571 & 2010-01-05 & 213.25 & 215.59\\
+03783310 & 14593 & 7 & 8 & 3571 & 2010-01-06 & 210.75 & 215.23 \\
+03783310 & 14593 & 7 & 8 & 3571 & 2010-01-07 & 209.05 & 212 \\
+03783310 & 14593 & 7 & 8 & 3571 & 2010-01-08 & 209.06 & 212 \\
+\ldots \\
+\end{tabular}
+
+\noindent (252 rows) \\
+\end{center}
+
+\paragraph{6}
+
+
+
+\paragraph{7}
+
+\color{blue}
+\begin{verbatim}
+SELECT count(1) FROM
+(SELECT * FROM
+  stocks2016.d2010
+  LEFT JOIN
+  (SELECT lpad(gvkey,6,'0') AS gvkey2,
+          liid,
+          linkdt,
+          CASE
+            WHEN linkenddt = 'E' THEN now()::TEXT
+            ELSE linkenddt
+          END,
+          linkprim
+          linktype,
+          lpermco,
+          lpermno,
+          usedflag
+   FROM stocks2016.lnk) AS RHS
+  ON stocks2016.d2010.permno = RHS.lpermno
+     AND stocks2016.d2010.permco = RHS.lpermco
+     AND date_part('epoch',retdate)
+       BETWEEN date_part('epoch',linkdt) AND date_part('epoch', linkenddt::DATE)
+WHERE RHS.gvkey2 = (SELECT DISTINCT gvkey
+  FROM stocks2016.fnd
+  WHERE conm = 'APPLE INC')) AS LHS
+LEFT JOIN
+stocks2016.fnd AS RHS
+ON LHS.gvkey2 = RHS.gvkey;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r | r | r | r | r | r | r | r | r}
+\textit{cusip} & \textit{permno} & \textit{permco} & \textit{issuno} & \textit{hsic} & \textit{retdate} & \textit{bid} & \textit{ask} & \textit{prc} \\
+\hline
+03783310 & 14593 & 7 & 8 & 3571 & 2010-01-04 & 212.38 & 214.5 & 214.00999  \\
+03783310 & 14593 & 7 & 8 & 3571 & 2010-01-04 & 212.38 & 214.5 & 214.00999  \\
+03783310 & 14593 & 7 & 8 & 3571 & 2010-01-04 & 212.38 & 214.5 & 214.00999  \\
+03783310 & 14593 & 7 & 8 & 3571 & 2010-01-05 & 213.25 & 215.59 & 214.38  \\
+03783310 & 14593 & 7 & 8 & 3571 & 2010-01-05 & 213.25 & 215.59 & 214.38  \\
+\ldots
+\end{tabular}
+
+\noindent (756 rows) \\
+\end{center}
+
+\paragraph{8}
+
+\color{blue}
+\begin{verbatim}
+SELECT count(1) FROM
+(SELECT * FROM
+  stocks2016.d2010
+  LEFT JOIN
+  (SELECT lpad(gvkey,6,'0') AS gvkey2,
+          liid,
+          linkdt,
+          CASE
+            WHEN linkenddt = 'E' THEN now()::TEXT
+            ELSE linkenddt
+          END,
+          linkprim,
+          linktype,
+          lpermco,
+          lpermno,
+          usedflag
+   FROM stocks2016.lnk) AS RHS
+  ON stocks2016.d2010.permno = RHS.lpermno
+    AND stocks2016.d2010.permco = RHS.lpermco
+    AND date_part('epoch',retdate)
+      BETWEEN date_part('epoch',linkdt) AND date_part('epoch', linkenddt::DATE)
+WHERE RHS.gvkey2 = (SELECT DISTINCT gvkey
+  FROM stocks2016.fnd
+  WHERE conm = 'APPLE INC')) AS LHS
+LEFT JOIN
+(stocks2016.fnd) AS RHS
+ON LHS.gvkey2 = RHS.gvkey
+  AND date_part('epoch', LHS.retdate)
+    BETWEEN date_part('epoch', stocks2016.fnd.datadate)
+      AND date_part('epoch', RHS.datadate) + 31536000 - 86400;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r | r | r | r | r | r | r | r}
+\textit{linkprim} & \textit{linktype} & \textit{lpermco} & \textit{lpermno} & \textit{usedflag} & \textit{cash} & \textit{cik} & \textit{conm}  \\
+\hline
+03783310 & 14593 & 7 & 8 & 3571 & 2010-01-04 & 212.38 & 214.5 \\
+03783310 & 14593 & 7 & 8 & 3571 & 2010-01-05 & 213.25 & 215.59  \\
+03783310 & 14593 & 7 & 8 & 3571 & 2010-01-06 & 210.75 & 215.23 \\
+03783310 & 14593 & 7 & 8 & 3571 & 2010-01-07 & 209.05 & 212 \\
+03783310 & 14593 & 7 & 8 & 3571 & 2010-01-08 & 209.06 & 212  \\
+03783310 & 14593 & 7 & 8 & 3571 & 2010-01-11 & 208.45 & 213 \\
+\ldots
+\end{tabular}
+
+\noindent (252 rows) \\
+\end{center}
+
+\paragraph{4.1.2}
+
+\paragraph{1} 
+
+\color{blue}
+\begin{verbatim}
+SELECT count(1) FROM stocks2016.lnk;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{count} \\
+\hline
+145858 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\color{blue}
+\begin{verbatim}
+SELECT count(1) FROM stocks2016.fnd;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{count} \\
+\hline
+33817 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\color{blue}
+\begin{verbatim}
+SELECT count(1) FROM stocks2016.d2010;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{count} \\
+\hline
+1679323 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\color{blue}
+\begin{verbatim}
+SELECT count(1) FROM stocks2016.d2011;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{count} \\
+\hline
+1697800 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\paragraph{2} 
+
+\color{blue}
+\begin{verbatim}
+SELECT count(*)
+FROM stocks2016.lnk
+WHERE linktype in ('LC', 'LU') AND linkprim in ('P', 'C');
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{count} \\
+\hline
+56236 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\color{blue}
+\begin{verbatim}
+SELECT COUNT(*) FROM
+(SELECT lpad(gvkey,6,'00') AS gvkey
+  FROM stocks2016.lnk
+  WHERE linktype IN ('LU','LC') AND linkprim IN ('P','C')) AS LHS
+INNER JOIN
+(SELECT * FROM stocks2016.fnd) AS RHS
+USING (gvkey);
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{count} \\
+\hline
+49604 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\color{blue}
+\begin{verbatim}
+SELECT COUNT(*) FROM
+(SELECT *
+FROM stocks2016.lnk
+WHERE linktype IN ('LU','LC') AND linkprim IN ('P','C')) AS LHS
+ INNER JOIN
+(SELECT * FROM stocks2016.d2010) AS RHS
+ON LHS.lpermno=RHS.permno AND LHS.lpermco=RHS.permco;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{count} \\
+\hline
+3194358 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\color{blue}
+\begin{verbatim}
+SELECT COUNT(*) FROM
+(SELECT *
+FROM stocks2016.lnk
+WHERE linktype IN ('LU','LC') AND linkprim IN ('P','C')) AS LHS
+ INNER JOIN
+(SELECT * FROM stocks2016.d2011) AS RHS
+ON LHS.lpermno=RHS.permno AND LHS.lpermco=RHS.permco;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{count} \\
+\hline
+3128252 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+
+\paragraph{3} 
+
+\color{blue}
+\begin{verbatim}
+SELECT count(*)
+FROM stocks2016.d2010
+WHERE permno is null;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{count} \\
+\hline
+0 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\color{blue}
+\begin{verbatim}
+SELECT count(1)
+FROM
+  (SELECT count(1) AS ct FROM
+    (SELECT permco
+    FROM stocks2016.d2010
+    GROUP BY permco, permno) AS A
+  GROUP BY permco) AS B
+WHERE ct>1;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{count} \\
+\hline
+101 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\paragraph{4} 
+
+\color{blue}
+\begin{verbatim}
+SELECT count(1) FROM stocks2016.fnd WHERE gvkey is null;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{count} \\
+\hline
+0 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\color{blue}
+\begin{verbatim}
+SELECT count(1) FROM stocks2016.fnd WHERE datadate is null;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{count} \\
+\hline
+0 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\paragraph{5} 
+
+\color{blue}
+\begin{verbatim}
+SELECT count(1), gvkey, date\_part('year', datadate::date)
+FROM stocks2016.fnd
+GROUP BY 2,3
+having count(1) > 1;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r | l | r}
+\textit{count} & \textit{gvkey} & \textit{date\_part} \\
+\hline
+2 & 180599 & 2011 \\
+2 & 013145 & 2010 \\
+2 & 108836 & 2011 \\
+2 & 186121 & 2010 \\
+2 & 147308 & 2009 \\
+2 & 107894 & 2009 \\
+2 & 179694 & 2011 \\
+2 & 186772 & 2011 \\
+2 & 170311 & 2011 \\
+2 & 028490 & 2011 \\
+\ldots\\
+\end{tabular}
+
+\noindent (51 rows) \\
+\end{center}
+
+\paragraph{6}
+
+\color{blue}
+\begin{verbatim}
+SELECT gvkey, datadate, MIN(nextret) AS nextret FROM
+(SELECT gvkey, datadate FROM stocks2016.fnd) AS LHS
+LEFT JOIN
+(SELECT gvkey, datadate AS nextret FROM stocks2016.fnd) AS RHS
+using (gvkey)
+WHERE LHS.datadate < RHS.nextret
+AND gvkey = (SELECT DISTINCT gvkey FROM stocks2016.fnd WHERE conm = 'APPLE INC')
+GROUP BY gvkey, datadate;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{l | l | l}
+\textit{gvkey} & \textit{datadate} & \textit{nextret} \\
+\hline
+180599 & 2011-03-31 & 2011-12-31 \\
+180599 & 2009-03-31 & 2010-03-31 \\
+180599 & 2010-03-31 & 2011-03-31 \\
+\end{tabular}
+
+\noindent (3 rows) \\
+\end{center}
+
+\paragraph{7}
+
+\color{blue}
+\begin{verbatim}
+SELECT gvkey2 AS gvkey, permno, permco, cash, emp, netinc, rev,
+       fnddt, tic, conm, prc\_, ret, vol, shrout
+FROM
+ (SELECT * FROM
+ (SELECT * FROM
+ stocks2016.d2010
+       LEFT JOIN
+ (SELECT *, lpad(gvkey, 6, '0') AS gvkey2 FROM stocks2016.lnk
+ WHERE linktype IN ('LU', 'LC') AND linkprim IN ('P', 'C')
+ AND date\_part('year', linkdt) <= 2010
+ AND (linkenddt = 'E' OR ((LEFT(linkenddt, 4))::FLOAT >= 2010 AND linkenddt != 'E'))) AS RHS
+ ON stocks2016.d2010.permno = RHS.lpermno AND stocks2016.d2010.permco = RHS.lpermco) AS LHS2
+     LEFT JOIN
+ (SELECT gvkey AS gvkey3, datadate, MIN(nextret) AS nextret FROM
+   (SELECT gvkey, datadate FROM stocks2016.fnd) AS LHS
+       LEFT JOIN
+   (SELECT gvkey, datadate AS nextret FROM stocks2016.fnd) AS RHS
+   USING (gvkey)
+   WHERE LHS.datadate < RHS.nextret
+   GROUP BY gvkey, datadate) AS RHS2
+ ON LHS2.gvkey2 = RHS2.gvkey3) AS LHS3
+   LEFT JOIN
+ (SELECT cash, emp, netinc, rev, datadate AS fnddt, tic, conm, gvkey AS gvkey4
+ FROM stocks2016.fnd) AS RHS3
+ON LHS3.gvkey2 = RHS3.gvkey4;
+\end{verbatim}
+\color{black}
+
+
+
+
+
+\paragraph{4.2\ Other Questions}
+
+\paragraph{1}
+
+\paragraph{a}
+
+\color{blue}
+\begin{verbatim}
+SELECT retdate, AVG(ret::FLOAT) AS equal\_weighted\_return
+FROM stocks2016.d2010
+WHERE ret NOT IN ('B', 'C')
+GROUP BY retdate
+ORDER BY 1;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{l | r}
+\textit{retdate} & \textit{equal\_weighted\_return} \\
+\hline
+2010-01-04 & 0.0191203468111077 \\
+2010-01-05 & 0.00247520686498856 \\
+2010-01-06 & 0.00321045536395543 \\
+2010-01-07 & 0.00688680061068702 \\
+2010-01-08 & 0.00726802457640055 \\
+2010-01-11 & 0.00356759804818542 \\
+2010-01-12 & -0.0101702171393717 \\
+2010-01-13 & 0.00888968664226898 \\
+2010-01-14 & 0.00443147406955462 \\
+2010-01-15 & -0.00866409743824334 \\
+\ldots\\
+\end{tabular}
+
+\noindent (252 rows) \\
+\end{center}
+
+\paragraph{b}
+
+\color{blue}
+\begin{verbatim}
+SELECT AVG((ret::FLOAT)*vol*abs(prc\_)) AS mrkt\_ret, retdate
+FROM stocks2016.d2010
+WHERE ret NOT IN ('B', 'C')
+GROUP BY retdate;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r | l}
+\textit{mrkt\_ret} & \textit{retdate} \\
+\hline
+-77018.0953005268 & 2010-04-26 \\
+153020.309874198 & 2010-08-16 \\
+89659.0468552718 & 2010-09-10 \\
+500122.897046624 & 2010-12-02 \\
+-42686.0166034468 & 2010-06-16 \\
+-193364.961943896 & 2010-07-28 \\
+794219.648273802 & 2010-10-05 \\
+21634.5130901749 & 2010-02-12 \\
+323284.180991414 & 2010-11-02 \\
+446966.560164994 & 2010-12-17 \\
+\ldots\\
+\end{tabular}
+
+\noindent (252 rows) \\
+\end{center}
+
+\paragraph{c}
+
+\color{blue}
+\begin{verbatim}
+SELECT mrkt\_ret, retdate FROM
+ (SELECT AVG((ret::FLOAT)*vol*abs(prc\_)) AS mrkt\_ret, retdate
+ FROM stocks2016.d2010
+ WHERE ret NOT IN ('B', 'C')
+ GROUP BY retdate) AS A
+WHERE retdate = '2010-01-21';
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r | l}
+\textit{mrkt\_ret} & \textit{retdate} \\
+\hline
+-1057989.3340833 & 2010-01-21 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\paragraph{d}
+
+\color{blue}
+\begin{verbatim}
+SELECT AVG((ret::FLOAT)) AS avgret,
+ AVG((ret::FLOAT)*vol*abs(prc\_)) AS mrkt\_ret, retdate
+FROM stocks2016.d2010
+WHERE ret NOT IN ('B', 'C')
+GROUP BY retdate;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r | r | l}
+\textit{avgret} & \textit{mrkt\_ret} & \textit{retdate} \\
+\hline
+0.00266098617231423 & -77018.0953005268 & 2010-04-26 \\
+0.00363016815769522 & 153020.309874198 & 2010-08-16 \\
+0.00408243721565059 & 89659.0468552718 & 2010-09-10 \\
+0.00893513607402913 & 500122.897046624 & 2010-12-02 \\
+-0.00197018672136129 & -42686.0166034468 & 2010-06-16 \\
+-0.00781766262135922 & -193364.961943896 & 2010-07-28 \\
+0.0185483627674101 & 794219.648273802 & 2010-10-05 \\
+0.00312267508750571 & 21634.5130901749 & 2010-02-12 \\
+0.0116843508638982 & 323284.180991414 & 2010-11-02 \\
+0.00367113058627484 & 446966.560164994 & 2010-12-17 \\
+\ldots\\
+\end{tabular}
+
+\noindent (252 rows) \\
+\end{center}
+
+\paragraph{e}
+
+\color{blue}
+\begin{verbatim}
+SELECT permno, permco FROM
+ (SELECT permno, permco, ret, retdate
+ FROM stocks2016.d2010) AS LHS
+LEFT JOIN
+ (SELECT AVG((ret::FLOAT)) AS avgret, retdate
+ FROM stocks2016.d2010
+ WHERE ret NOT IN ('B', 'C')
+ GROUP BY retdate) AS RHS
+USING (retdate)
+WHERE ret NOT IN ('B', 'C') AND (ret::FLOAT) > avgret
+GROUP BY permno, permco
+HAVING count(1) > 150;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r | r}
+\textit{permno} & \textit{permco} \\
+\hline
+27975 & 21194 \\
+77729 & 6913 \\
+\end{tabular}
+
+\noindent (2 rows) \\
+\end{center}
+
+\paragraph{f}
+
+\color{blue}
+\begin{verbatim}
+SELECT permno, permco, MAX((ret::FLOAT))-MIN((ret::FLOAT)) AS diff\_ret
+FROM stocks2016.d2010
+WHERE ret NOT IN ('B', 'C')
+GROUP BY permno, permco
+ORDER BY 3 DESC
+LIMIT 1;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r | r | r}
+\textit{permno} & \textit{permco} & \textit{diff\_ret} \\
+\hline
+82554 & 14170 & 5.991032 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\paragraph{g}
+
+\color{blue}
+\begin{verbatim}
+SELECT abs(AVG((ret::FLOAT))-AVG((ret::FLOAT)*vol*abs(prc\_))), retdate
+FROM stocks2016.d2010
+WHERE ret NOT IN ('B', 'C')
+GROUP BY retdate
+ORDER BY 1 DESC
+LIMIT 1;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r | l}
+\textit{abs} & \textit{retdate} \\
+\hline
+2674705.36447007 & 2010-05-10 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\paragraph{2}
+
+\color{blue}
+\begin{verbatim}
+SELECT count(*)
+FROM
+(SELECT date\_part('MONTH', retdate) AS month,
+  date\_part('DAY', retdate) AS day,
+  ret::float AS ret\_2010
+FROM stocks2016.d2011
+WHERE ret NOT IN ('B', 'C')) AS LHS 
+INNER JOIN
+(SELECT date\_part('MONTH', retdate) AS month,
+  date\_part('DAY', retdate) AS day,
+  AVG(ret::float) AS avg\_ret\_2011
+FROM stocks2016.d2010
+WHERE ret NOT IN ('B', 'C')
+GROUP BY 1,2) AS RHS
+using(month, day)
+WHERE ret\_2010 > avg\_ret\_2011;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{count} \\
+\hline
+634986 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\color{blue}
+\begin{verbatim}
+SELECT count(*)
+FROM
+(SELECT date\_part('MONTH', retdate) AS month,
+  date\_part('DAY', retdate) AS day,
+  ret::float AS ret\_2011
+FROM stocks2016.d2010
+WHERE ret NOT IN ('B', 'C')) AS LHS 
+INNER JOIN
+(SELECT date\_part('MONTH', retdate) AS month,
+  date\_part('DAY', retdate) AS day,
+  AVG(ret::float) AS avg\_ret\_2010
+FROM stocks2016.d2011
+WHERE ret NOT IN ('B', 'C')
+GROUP BY 1,2) AS RHS
+using(month, day)
+WHERE ret\_2011 > avg\_ret\_2010;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{count} \\
+\hline
+648775 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\paragraph{3}
+
+\color{blue}
+\begin{verbatim}
+SELECT ctinner::FLOAT/ctall AS percentage FROM
+(SELECT COUNT(DISTINCT retdate) AS ctall FROM stocks2016.d2010)AS LHS1
+CROSS JOIN
+ (SELECT COUNT(1) AS ctinner FROM
+(SELECT DISTINCT(retdate)AS retdate FROM stocks2016.d2010 ORDER BY 1) AS LHS
+INNER JOIN
+ (SELECT retdate-365 AS retdate FROM
+   (SELECT DISTINCT(retdate)FROM stocks2016.d2011 ORDER BY 1) AS TEMP)AS RHS
+USING(retdate)) AS RHS;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{percentage} \\
+\hline
+0.793650793650794 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\paragraph{4}
+
+\color{blue}
+\begin{verbatim}
+SELECT permno, permco, abs(yearly\_return\_2010-yearly\_return\_2011) AS reversechange
+FROM
+(SELECT permno, permco, abs((lstdayprc\_-frtdayprc\_)/frtdayprc\_) AS yearly\_return\_2010
+FROM(
+SELECT
+ permno, permco,
+ SUM(CASE WHEN frtday=retdate THEN prc\_ ELSE 0 END) AS frtdayprc\_,
+ SUM(CASE WHEN lstday=retdate THEN prc\_ ELSE 0 END) AS lstdayprc\_
+FROM(
+SELECT * FROM
+(SELECT permno, permco, MIN(retdate) AS frtday, MAX(retdate) AS lstday FROM stocks2016.d2010
+WHERE prc\_ is not null
+GROUP BY 1,2) AS LLHS
+LEFT JOIN
+(SELECT permno, permco, prc\_, retdate FROM stocks2016.d2010) AS LRHS
+USING(permno, permco)
+WHERE(LRHS.retdate=LLHS.frtday OR LRHS.retdate=LLHS.lstday)
+) AS TEMP
+GROUP BY 1,2
+) AS TEMP2
+WHERE frtdayprc\_!=0) AS LLLHS
+INNER JOIN
+(SELECT permno, permco, abs((lstdayprc\_-frtdayprc\_)/frtdayprc\_) AS yearly\_return\_2011
+FROM(
+SELECT
+ permno, permco,
+ SUM(CASE WHEN frtday=retdate THEN prc\_ ELSE 0 END) AS frtdayprc\_,
+ SUM(CASE WHEN lstday=retdate THEN prc\_ ELSE 0 END) AS lstdayprc\_
+FROM(
+SELECT * FROM
+(SELECT permno, permco, MIN(retdate) AS frtday, MAX(retdate) AS lstday FROM stocks2016.d2011
+WHERE prc\_ is not null
+GROUP BY 1,2) AS RLHS
+LEFT JOIN
+(SELECT permno, permco, prc\_, retdate FROM stocks2016.d2011) AS RRHS
+USING(permno, permco)
+WHERE(RRHS.retdate=RLHS.frtday OR RRHS.retdate=RLHS.lstday)
+) AS TEMP
+GROUP BY 1,2
+) AS TEMP2
+WHERE frtdayprc\_!=0) AS RRRHS
+using (permno, permco)
+ORDER BY 3 desc
+LIMIT 5;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r | r | r}
+\textit{permno} & \textit{permco} & \textit{reversechange} \\
+\hline
+80625 & 13139 & 36.4589552238806 \\
+85047 & 15532 & 29.1259259259259 \\
+11056 & 8926 & 28.041465051111 \\
+83551 & 14615 & 26.6631704885344 \\
+92282 & 52760 & 23.127992765918 \\
+\end{tabular}
+
+\noindent (5 rows) \\
+\end{center}
+
+\paragraph{5}
+
+\color{blue}
+\begin{verbatim}
+SELECT LHS\_tic AS tic,
+ SUM(CASE
+   WHEN RHS\_tic < LHS\_tic THEN 1
+   ELSE 0
+ END) AS num\_before
+FROM
+ (SELECT * FROM
+   (SELECT DISTINCT tic AS LHS\_tic FROM stocks2016.fnd
+   WHERE tic IS NOT null AND fyear = 2010) AS LHS
+ CROSS JOIN
+   (SELECT DISTINCT tic AS RHS\_tic FROM stocks2016.fnd
+   WHERE tic IS NOT null AND fyear = 2010) AS RHS) AS A
+GROUP BY 1
+ORDER BY 1;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{l | r}
+\textit{tic} & \textit{num\_before} \\
+\hline
+0015B & 0 \\
+0030B & 1 \\
+0032A & 2 \\
+0033A & 3 \\
+0038A & 4 \\
+0039A & 5 \\
+0040A & 6 \\
+0044A & 7 \\
+0048A & 8 \\
+0051A & 9 \\
+0052A & 10 \\
+\ldots\\
+\end{tabular}
+
+\noindent (11073 rows) \\
+\end{center}
+
+\paragraph{6}
+
+\color{blue}
+\begin{verbatim}
+SELECT count(1) FROM
+ (SELECT permno, permco, retdate\_month,
+     (MAX(prc\_\_last\_)-MAX(prc\_\_first))/MAX(prc\_\_first) AS monthly\_ret
+ FROM
+   (SELECT *,
+     CASE
+       WHEN retdate\_epoch = month\_first THEN prc\_
+     END AS prc\_\_first,
+     CASE
+       WHEN retdate\_epoch = month\_last\_ THEN prc\_
+     END AS prc\_\_last\_
+   FROM
+     (SELECT permno AS permno1, permco AS permco1, prc\_,
+       date\_part('epoch', retdate) AS retdate\_epoch
+     FROM stocks2016.d2010) AS LHS
+   LEFT JOIN
+     (SELECT permno, permco, date\_part('month', retdate) AS retdate\_month,
+       MIN(date\_part('epoch', retdate)) AS month\_first,
+       MAX(date\_part('epoch', retdate)) AS month\_last\_
+     FROM stocks2016.d2010
+     GROUP BY 1,2,3) AS RHS
+   ON LHS.permco1 = RHS.permco AND LHS.permno1 = RHS.permno
+   WHERE retdate\_epoch = month\_first OR retdate\_epoch = month\_last\_) AS A
+ GROUP BY 1,2,3) AS LHS2
+LEFT JOIN
+ (SELECT permno, permco, MAX(monthly\_ret) AS monthly\_ret, count(1) AS ct
+ FROM
+   (SELECT permno, permco, retdate\_month,
+     (MAX(prc\_\_last\_)-MAX(prc\_\_first))/MAX(prc\_\_first) AS monthly\_ret
+   FROM
+     (SELECT *,
+       CASE
+         WHEN retdate\_epoch = month\_first THEN prc\_
+       END AS prc\_\_first,
+       CASE
+         WHEN retdate\_epoch = month\_last\_ THEN prc\_
+       END AS prc\_\_last\_
+     FROM
+       (SELECT permno AS permno1, permco AS permco1, prc\_,
+         date\_part('epoch', retdate) AS retdate\_epoch
+       FROM stocks2016.d2010) AS LHS
+     LEFT JOIN
+       (SELECT permno, permco, date\_part('month', retdate) AS retdate\_month,
+         MIN(date\_part('epoch', retdate)) AS month\_first,
+         MAX(date\_part('epoch', retdate)) AS month\_last\_
+       FROM stocks2016.d2010
+       GROUP BY 1,2,3) AS RHS
+     ON LHS.permco1 = RHS.permco AND LHS.permno1 = RHS.permno
+     WHERE retdate\_epoch = month\_first OR retdate\_epoch = month\_last\_) AS A
+   GROUP BY 1,2,3) AS B
+ GROUP BY permno, permco) AS RHS2
+USING (permno, permco, monthly\_ret)
+WHERE ct IS NOT null AND retdate\_month = 1;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{count} \\
+\hline
+343 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\paragraph{7}
+
+\color{blue}
+\begin{verbatim}
+SELECT
+ SUM(CASE
+   WHEN monthly\_ret2 > monthly\_ret AND monthly\_ret2 IS NOT null THEN 1
+   ELSE 0
+ END)*1.0/count(1) AS probability
+FROM
+ (SELECT permno, permco, retdate\_month,
+       (MAX(prc\_last\_)-MAX(prc\_first))/MAX(prc\_first) AS monthly\_ret
+ FROM
+   (SELECT *,
+     CASE
+       WHEN retdate\_epoch = month\_first THEN prc\_
+     END AS prc\_first,
+     CASE
+       WHEN retdate\_epoch = month\_last\_ THEN prc\_
+     END AS prc\_last\_
+   FROM
+     (SELECT permno AS permno1, permco AS permco1, prc\_,
+       date\_part('epoch', retdate) AS retdate\_epoch
+     FROM stocks2016.d2010) AS LHS
+   LEFT JOIN
+     (SELECT permno, permco, date\_part('month', retdate) AS retdate\_month,
+       MIN(date\_part('epoch', retdate)) AS month\_first,
+       MAX(date\_part('epoch', retdate)) AS month\_last\_
+     FROM stocks2016.d2010
+     GROUP BY 1,2,3) AS RHS
+   ON LHS.permco1 = RHS.permco AND LHS.permno1 = RHS.permno
+   WHERE retdate\_epoch = month\_first OR retdate\_epoch = month\_last\_) AS A
+ GROUP BY 1,2,3) AS LHS
+LEFT JOIN
+ (SELECT permno, permco, retdate\_month-1 AS retdate\_month,
+       (MAX(prc\_last\_)-MAX(prc\_first))/MAX(prc\_first) AS monthly\_ret2
+ FROM
+   (SELECT *,
+     CASE
+       WHEN retdate\_epoch = month\_first THEN prc\_
+     END AS prc\_first,
+     CASE
+       WHEN retdate\_epoch = month\_last\_ THEN prc\_
+     END AS prc\_last\_
+   FROM
+     (SELECT permno AS permno1, permco AS permco1, prc\_,
+       date\_part('epoch', retdate) AS retdate\_epoch
+     FROM stocks2016.d2010) AS LHS
+   LEFT JOIN
+     (SELECT permno, permco, date\_part('month', retdate) AS retdate\_month,
+       MIN(date\_part('epoch', retdate)) AS month\_first,
+       MAX(date\_part('epoch', retdate)) AS month\_last\_
+     FROM stocks2016.d2010
+     GROUP BY 1,2,3) AS RHS
+   ON LHS.permco1 = RHS.permco AND LHS.permno1 = RHS.permno
+   WHERE retdate\_epoch = month\_first OR retdate\_epoch = month\_last\_) AS A
+ GROUP BY 1,2,3) AS RHS
+USING (permno, permco, retdate\_month);
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r}
+\textit{probability} \\
+\hline
+0.47115839243498817967 \\
+\end{tabular}
+
+\noindent (1 row) \\
+\end{center}
+
+\paragraph{8}
+
+\color{blue}
+\begin{verbatim}
+SELECT permno, permco, 365-days\_before-numdays AS missing\_numdays
+FROM
+ (SELECT *,
+   (first\_date-date\_part('epoch', '2010-01-01'::date))/86400 AS days\_before
+ FROM
+   (SELECT permno, permco, count(1) AS numdays
+   FROM stocks2016.d2010
+   GROUP BY permno, permco) AS LHS
+ LEFT JOIN
+   (SELECT permno, permco, MIN(date\_part('epoch', retdate)) AS first\_date
+   FROM stocks2016.d2010
+   GROUP BY permno, permco) AS RHS
+ USING (permno, permco)) AS A;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r | r | r}
+\textit{permno} & \textit{permco} & \textit{missing\_numdays} \\
+\hline
+10001 & 7953 & 110 \\
+10002 & 7954 & 110 \\
+10025 & 7975 & 110 \\
+10026 & 7976 & 110 \\
+10028 & 7978 & 110 \\
+10032 & 7980 & 110 \\
+10044 & 7992 & 110 \\
+10051 & 7999 & 110 \\
+10065 & 20023 & 110 \\
+10078 & 8021 & 346 \\
+\ldots\\
+\end{tabular}
+
+\noindent (7108 rows) \\
+\end{center}
+
+\paragraph{9}
+
+\paragraph{a}
+
+\color{blue}
+\begin{verbatim}
+SELECT AVG((ret::FLOAT)) AS avgret, retdate
+FROM stocks2016.d2010
+WHERE ret NOT IN ('B', 'C')
+GROUP BY retdate
+HAVING SUM(vol) > 0;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r | l}
+\textit{avgret} & \textit{retdate} \\
+\hline
+0.00266098617231423 & 2010-04-26 \\
+0.00363016815769522 & 2010-08-16 \\
+0.00408243721565059 & 2010-09-10 \\
+0.00893513607402913 & 2010-12-02 \\
+-0.00197018672136129 & 2010-06-16 \\
+-0.00781766262135922 & 2010-07-28 \\
+0.0185483627674101 & 2010-10-05 \\
+0.00312267508750571 & 2010-02-12 \\
+0.0116843508638982 & 2010-11-02 \\
+0.00367113058627484 & 2010-12-17 \\
+\ldots\\
+\end{tabular}
+
+\noindent (252 rows) \\
+\end{center}
+
+\color{blue}
+\begin{verbatim}
+SELECT AVG((ret::FLOAT)) AS avgret, retdate
+FROM stocks2016.d2011
+WHERE ret NOT IN ('B', 'C')
+GROUP BY retdate
+HAVING SUM(vol) > 0;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r | l}
+\textit{avgret} & \textit{retdate} \\
+\hline
+-0.00675280182094083 & 2011-01-04 \\
+0.0157599200059586 & 2011-09-27 \\
+0.0189066896346011 & 2011-12-09 \\
+0.00389523259326385 & 2011-02-08 \\
+0.000393707960644009 & 2011-10-20 \\
+0.00724000664752982 & 2011-03-17 \\
+0.010976879735418 & 2011-05-18 \\
+0.0147213890232839 & 2011-02-01 \\
+0.00421418543442499 & 2011-07-15 \\
+0.0171193941246645 & 2011-10-05 \\
+\ldots\\
+\end{tabular}
+
+\noindent (252 rows) \\
+\end{center}
+
+\paragraph{b}
+
+\color{blue}
+\begin{verbatim}
+SELECT
+  permno,
+  permco,
+  (AVG(ret*avgret)-(AVG(ret)*AVG(avgret)))/(SQRT(AVG(ret\^2) -
+  (AVG(ret)*AVG(ret)))*SQRT(AVG(avgret\^2)-(AVG(avgret)*AVG(avgret))))
+  AS correlation
+FROM
+ (SELECT * FROM
+   (SELECT permno, permco, (ret::FLOAT) AS ret, retdate
+   FROM stocks2016.d2010
+   WHERE ret NOT IN ('B', 'C')) AS LHS
+ LEFT JOIN
+   (SELECT AVG((ret::FLOAT)) AS avgret, retdate
+   FROM stocks2016.d2010
+   WHERE ret NOT IN ('B', 'C')
+   GROUP BY retdate
+   HAVING SUM(vol) > 0) AS RHS
+ USING (retdate)
+ ORDER BY permno, permco) AS A
+GROUP BY permno, permco;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r | r | r}
+\textit{permno} & \textit{permco} & \textit{correlation} \\
+\hline
+10001 & 7953 & 0.103680743777476 \\
+10002 & 7954 & 0.106402130270876 \\
+10025 & 7975 & 0.568309622313311 \\
+10026 & 7976 & 0.531373747153143 \\
+10028 & 7978 & 0.140051921879338 \\
+10032 & 7980 & 0.65622606002088 \\
+10044 & 7992 & 0.195019951484385 \\
+10051 & 7999 & 0.37970098802115 \\
+10065 & 20023 & 0.938191858701633 \\
+10078 & 8021 & -0.18652613628336 \\
+\ldots\\
+\end{tabular}
+
+\noindent (7041 rows) \\
+\end{center}
+
+\color{blue}
+\begin{verbatim}
+SELECT
+  permno,
+  permco,
+  (AVG(ret*avgret)-(AVG(ret)*AVG(avgret)))/(SQRT(AVG(ret\^2) -
+  (AVG(ret)*AVG(ret)))*SQRT(AVG(avgret\^2)-(AVG(avgret)*AVG(avgret))))
+  AS correlation
+FROM
+ (SELECT * FROM
+   (SELECT permno, permco, (ret::FLOAT) AS ret, retdate
+   FROM stocks2016.d2011
+   WHERE ret NOT IN ('B', 'C')) AS LHS
+ LEFT JOIN
+   (SELECT AVG((ret::FLOAT)) AS avgret, retdate
+   FROM stocks2016.d2011
+   WHERE ret NOT IN ('B', 'C')
+   GROUP BY retdate
+   HAVING SUM(vol) > 0) AS RHS
+ USING (retdate)
+ ORDER BY permno, permco) AS A
+GROUP BY permno, permco;
+\end{verbatim}
+\color{black}
+
+\begin{center}
+\begin{tabular}{r | r | r}
+\textit{permno} & \textit{permco} & \textit{correlation} \\
+\hline
+10001 & 7953 & 0.293168845250529 \\
+10002 & 7954 & 0.1229397678128 \\
+10025 & 7975 & 0.71954827820625 \\
+10026 & 7976 & 0.793998055454881 \\
+10028 & 7978 & 0.213824624825929 \\
+10032 & 7980 & 0.704085102718905 \\
+10044 & 7992 & 0.150239432564814 \\
+10051 & 7999 & 0.585723405676299 \\
+10065 & 20023 & 0.953925354461383 \\
+10100 & 8042 & 0.0485801548426597 \\
+\ldots\\
+\end{tabular}
+
+\noindent (7083 rows) \\
+\end{center}
+
+\paragraph{c}
+
+\color{blue}
+\begin{verbatim}
+SELECT permno, permco,
+ (MAX(prc\_last\_)-MAX(prc\_first))/MAX(prc\_first) AS yearly\_ret2010
+FROM
+ (SELECT *,
+   CASE
+     WHEN retdate\_epoch = retdate\_first THEN prc\_
+   END AS prc\_first,
+   CASE
+     WHEN retdate\_epoch = retdate\_last\_ THEN prc\_
+   END AS prc\_last\_
+ FROM
+   (SELECT permno, permco, prc\_,
+     date\_part('epoch', retdate) AS retdate\_epoch
+   FROM stocks2016.d2010) AS LHS
+ LEFT JOIN
+   (SELECT permno, permco,
+     MIN(date\_part('epoch', retdate)) AS retdate\_first,
+     MAX(date\_part('epoch', retdate)) AS retdate\_last\_
+   FROM stocks2016.d2010
+   WHERE prc\_ IS NOT null --gets the first AND last\_ dates that are not null
+   GROUP BY permno, permco) AS RHS
+ USING (permno, permco)
+ WHERE retdate\_epoch = retdate\_first OR retdate\_epoch = retdate\_last\_) AS A
+GROUP BY permno, permco;
+
+
+SELECT permno, permco,
+ (MAX(prc\_last\_)-MAX(prc\_first))/MAX(prc\_first) AS yearly\_ret2011
+FROM
+ (SELECT *,
+   CASE
+     WHEN retdate\_epoch = retdate\_first THEN prc\_
+   END AS prc\_first,
+   CASE
+     WHEN retdate\_epoch = retdate\_last\_ THEN prc\_
+   END AS prc\_last\_
+ FROM
+   (SELECT permno, permco, prc\_,
+     date\_part('epoch', retdate) AS retdate\_epoch
+   FROM stocks2016.d2011) AS LHS
+ LEFT JOIN
+   (SELECT permno, permco,
+     MIN(date\_part('epoch', retdate)) AS retdate\_first,
+     MAX(date\_part('epoch', retdate)) AS retdate\_last\_
+   FROM stocks2016.d2011
+   WHERE prc\_ IS NOT null --gets the first AND last\_ dates that are not null
+   GROUP BY permno, permco) AS RHS
+ USING (permno, permco)
+ WHERE retdate\_epoch = retdate\_first OR retdate\_epoch = retdate\_last\_) AS A
+GROUP BY permno, permco;
+\end{verbatim}
+\color{black}
+
+
+\paragraph{d}
+
+\end{document}

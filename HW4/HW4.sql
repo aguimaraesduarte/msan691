@@ -1,72 +1,4 @@
-﻿--1 
-select rev, netinc, cash
-from stocks2016.fnd
-where conm = 'APPLE INC'
-and fyear = 2010;
-
---2
---Mikaela
-
---3
-SELECT * FROM stocks2016.d2010 WHERE lpad(cusip,8,'0') = (SELECT distinct lpad(cusip,8,'0') FROM stocks2016.fnd where conm = 'APPLE INC');
-
---4
-select *
-from stocks2016.lnk
-where lpad(gvkey,6,'0') = (select distinct gvkey from stocks2016.fnd where conm = 'APPLE INC')
-and linktype in ('LU', 'LC')
-and linkprim in ('P', 'C');
-
---5
-select * from
-(select * from stocks2016.d2010) as LHS
-left join
-(select * from stocks2016.lnk) as RHS
-on LHS.permco = RHS.lpermco
-and LHS.permno = RHS.lpermno
-and LHS.retdate > RHS.linkdt
-where lpad(RHS.gvkey,6,'0') = (select distinct gvkey from stocks2016.fnd where conm = 'APPLE INC')
-and RHS.linkenddt = 'E';
-
---6
---same number of rows
-
---7
-select count(1) from
-(
-select * from
-(select * from stocks2016.d2010) as LHS
-left join
-(select *, lpad(gvkey,6,'0') as gvkey2 from stocks2016.lnk) as RHS
-on LHS.permco = RHS.lpermco
-and LHS.permno = RHS.lpermno
-and LHS.retdate > RHS.linkdt
-where lpad(RHS.gvkey,6,'0') = (select distinct gvkey from stocks2016.fnd where conm = 'APPLE INC')
-and RHS.linkenddt = 'E'
-) as LHS2
-left join
-(select * from stocks2016.fnd) as RHS2
-on LHS2.gvkey2 = RHS2.gvkey;
-
---8
-select count(1) from
-(
-select * from
-(select * from stocks2016.d2010) as LHS
-left join
-(select *, lpad(gvkey,6,'0') as gvkey2 from stocks2016.lnk) as RHS
-on LHS.permco = RHS.lpermco
-and LHS.permno = RHS.lpermno
-and LHS.retdate > RHS.linkdt
-where lpad(RHS.gvkey,6,'0') = (select distinct gvkey from stocks2016.fnd where conm = 'APPLE INC')
-and RHS.linkenddt = 'E'
-) as LHS2
-left join
-(select * from stocks2016.fnd) as RHS2
-on LHS2.gvkey2 = RHS2.gvkey
-and LHS2.retdate between RHS2.datadate and (RHS2.datadate + interval '1 year' - interval '1 day');
-
---1
+﻿--1
 select count(1) from stocks2016.lnk;
 select count(1) from stocks2016.fnd;
 select count(1) from stocks2016.d2010;
@@ -129,42 +61,6 @@ and gvkey = '180599'
 group by gvkey, datadate;
 
 --7
-create table stocks2016.gvkeyDateCrossjoin as (
-select gvkey, datadate, min(nextret) as nextret from
-(select gvkey, datadate from stocks2016.fnd) as LHS
-left join
-(select gvkey, datadate as nextret from stocks2016.fnd) as RHS
-using (gvkey)
-where LHS.datadate < RHS.nextret
-group by gvkey, datadate
-);
-
-select * from
-(select * from
-(select * from 
-(select * from stocks2016.d2010) as LHS
-left join
-(select *, lpad(gvkey,6,'0') as gvkey2 from stocks2016.lnk) as RHS
-on LHS.permco = RHS.lpermco
-and LHS.permno = RHS.lpermno
-and LHS.retdate > RHS.linkdt
-and RHS.linkenddt = 'E'
-) as LHS2
-left join
-(
-select gvkey, datadate, min(nextret) as nextret from
-(select gvkey, datadate from stocks2016.fnd) as LHS
-left join
-(select gvkey, datadate as nextret from stocks2016.fnd) as RHS
-using (gvkey)
-where LHS.datadate < RHS.nextret
-group by gvkey, datadate
-) as RHS2
-on LHS2.gvkey2 = RHS2.gvkey
-) as LHS3
-left join
-(select * from stocks2016.fnd) as RHS3
-on LHS3.gvkey2 = RHS3.gvkey;
 
 
 
@@ -174,9 +70,101 @@ on LHS3.gvkey2 = RHS3.gvkey;
 
 
 
+--1
+--a
+select retdate, avg(ret::FLOAT) as equal_weighted_return
+from stocks2016.d2010
+where ret not in ('B', 'C')
+group by retdate
+order by 1;
 
+--b
+SELECT avg((ret::FLOAT)*vol*abs(prc)) AS mrkt_ret, retdate
+FROM stocks2016.d2010
+WHERE ret NOT IN ('B', 'C')
+GROUP BY retdate;
 
+--c
+SELECT mrkt_ret, retdate FROM
+ (SELECT avg((ret::FLOAT)*vol*abs(prc)) AS mrkt_ret, retdate
+ FROM stocks2016.d2010
+ WHERE ret NOT IN ('B', 'C')
+ GROUP BY retdate) AS A
+WHERE retdate = '2010-01-21';
 
+--d
+SELECT avg((ret::FLOAT)) AS avgret,
+ avg((ret::FLOAT)*vol*abs(prc)) AS mrkt_ret, retdate
+FROM stocks2016.d2010
+WHERE ret NOT IN ('B', 'C')
+GROUP BY retdate;
 
+--e
+SELECT permno, permco FROM
+ (SELECT permno, permco, ret, retdate
+ FROM stocks2016.d2010) AS LHS
+LEFT JOIN
+ (SELECT avg((ret::FLOAT)) AS avgret, retdate
+ FROM stocks2016.d2010
+ WHERE ret NOT IN ('B', 'C')
+ GROUP BY retdate) AS RHS
+USING (retdate)
+WHERE ret NOT IN ('B', 'C') AND (ret::FLOAT) > avgret
+GROUP BY permno, permco
+HAVING count(1) > 150;
 
+--f
+SELECT permno, permco, max((ret::FLOAT))-min((ret::FLOAT)) AS diff_ret
+FROM stocks2016.d2010
+WHERE ret NOT IN ('B', 'C')
+GROUP BY permno, permco
+ORDER BY 3 DESC
+LIMIT 1;
 
+--g
+SELECT abs(avg((ret::FLOAT))-avg((ret::FLOAT)*vol*abs(prc))), retdate
+FROM stocks2016.d2010
+WHERE ret NOT IN ('B', 'C')
+GROUP BY retdate
+ORDER BY 1 DESC
+LIMIT 1;
+
+--2
+select count(*)
+from
+(select date_part('MONTH', retdate) AS month, date_part('DAY', retdate) AS day, ret::float as ret_2010
+from stocks2016.d2011
+where ret not in ('B', 'C')) as LHS 
+inner join
+(select date_part('MONTH', retdate) AS month, date_part('DAY', retdate) AS day, avg(ret::float) as avg_ret_2011
+from stocks2016.d2010
+where ret not in ('B', 'C')
+group by 1,2) as RHS
+using(month, day)
+where ret_2010 > avg_ret_2011;
+--634986
+
+select count(*)
+from
+(select date_part('MONTH', retdate) AS month, date_part('DAY', retdate) AS day, ret::float as ret_2011
+from stocks2016.d2010
+where ret not in ('B', 'C')) as LHS 
+inner join
+(select date_part('MONTH', retdate) AS month, date_part('DAY', retdate) AS day, avg(ret::float) as avg_ret_2010
+from stocks2016.d2011
+where ret not in ('B', 'C')
+group by 1,2) as RHS
+using(month, day)
+where ret_2011 > avg_ret_2010;
+--648775
+
+--3
+ SELECT ctinner::FLOAT/ctall as percentage FROM
+(SELECT COUNT(DISTINCT retdate) as ctall FROM stocks2016.d2010)AS LHS1
+CROSS JOIN
+ (SELECT COUNT(1) as ctinner FROM
+(SELECT DISTINCT(retdate)AS retdate FROM stocks2016.d2010 ORDER BY 1) AS LHS
+INNER JOIN
+ (SELECT retdate-365 AS retdate FROM
+   (SELECT DISTINCT(retdate)FROM stocks2016.d2011 ORDER BY 1) AS TEMP)AS RHS
+USING(retdate)) AS RHS;
